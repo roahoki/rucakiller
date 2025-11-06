@@ -77,29 +77,42 @@
 
 ### TASK-101: Crear Partida (GameMaster)
 **Prioridad:** 🔴 CRÍTICA
-**Estimación:** 4 horas
+**Estimación:** 5 horas
 **Dependencias:** TASK-001
 **HU relacionadas:** HU-GM01
 
 **Subtareas:**
+- [ ] Crear página `/create` - Formulario de registro GameMaster
+  - Input: Nombre del GameMaster
+  - Input: PIN (4-6 dígitos numéricos)
+  - Confirmación del PIN
+  - Validación de PIN
 - [ ] Crear API route `/api/game/create`
-- [ ] Generar código único de 6 caracteres
-- [ ] Insertar registro en tabla `games`
-- [ ] Crear jugador GameMaster en tabla `players`
+  - Generar código único de 6 caracteres
+  - Hashear PIN usando bcrypt/crypto
+  - Insertar registro en tabla `games` (con `game_master_pin` hasheado)
+  - Crear jugador GameMaster en tabla `players` (is_game_master = true)
+  - Vincular GameMaster a la partida (game_master_id)
+  - Generar session token y guardarlo en localStorage
 - [ ] Redirigir a dashboard del GameMaster
-- [ ] Manejo de errores
+- [ ] Manejo de errores (PIN inválido, código duplicado, etc.)
 
 **Criterios de aceptación:**
+- ✅ GameMaster ingresa nombre + PIN al crear partida
+- ✅ PIN se guarda hasheado en DB (nunca en texto plano)
 - ✅ Se crea partida con código único
 - ✅ GameMaster queda registrado como jugador
 - ✅ Código es visible para compartir
 - ✅ No hay colisiones de códigos
+- ✅ Session token guardado en localStorage
 
 **Testing manual:**
 1. Click en "Crear Partida"
-2. Verificar que se genera código
-3. Verificar redirección a dashboard
-4. Verificar en Supabase que se creó el registro
+2. Ingresar nombre y PIN (ej: "1234")
+3. Confirmar PIN
+4. Verificar que se genera código de partida
+5. Verificar redirección a dashboard
+6. Verificar en Supabase que el PIN está hasheado
 
 ---
 

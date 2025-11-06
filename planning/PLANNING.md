@@ -185,19 +185,26 @@ app/
 
 ## 🔐 Autenticación Simplificada
 
-**No usaremos login tradicional:**
+### **GameMaster (con PIN de seguridad):**
+- Al crear una partida, el GameMaster ingresa su **nombre** y un **PIN** (4-6 dígitos)
+- El PIN se hashea y se guarda en la tabla `games` (campo `game_master_pin`)
+- Se genera un **session token** en localStorage
+- Para volver a acceder a su partida, necesita: código de partida + PIN
+
+### **Jugadores (sin autenticación):**
 - Al unirse a un juego, el jugador solo ingresa su **nombre**
 - Se genera un **session token** en localStorage
 - El jugador se asocia a la partida mediante el **código de juego**
-- El GameMaster se identifica al crear la partida
 
 **Ventajas:**
-- ✅ Sin fricción (no crear cuentas)
+- ✅ GameMaster protegido con PIN (evita que otros accedan a su cuenta)
+- ✅ Jugadores sin fricción (no crear cuentas)
 - ✅ Ideal para una fiesta (acceso rápido)
-- ✅ Sin contraseñas que olvidar
+- ✅ Simple: PIN solo para GameMaster
 
 **Desventajas:**
 - ⚠️ Si cierran la app, pierden la sesión → Solución: guardar en localStorage
+- ⚠️ GameMaster debe recordar su PIN (4-6 dígitos numéricos)
 
 ---
 

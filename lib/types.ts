@@ -4,6 +4,7 @@ export interface Game {
   code: string;
   status: 'lobby' | 'assigning' | 'active' | 'paused' | 'finished';
   game_master_id: string;
+  game_master_pin: string | null; // PIN hasheado del GameMaster
   start_time: string | null;
   end_time: string | null;
   created_at: string;
