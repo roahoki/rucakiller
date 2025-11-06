@@ -24,6 +24,10 @@ export default function Home() {
     router.push('/join');
   };
 
+  const handleGameMasterLogin = () => {
+    router.push('/gamemaster/login');
+  };
+
   return (
     <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4 font-sans">
       <div className="flex h-full w-full items-center justify-center">
@@ -48,6 +52,13 @@ export default function Home() {
               className="w-full rounded-lg border-2 border-red-600 bg-transparent px-8 py-4 text-lg font-semibold text-red-100 shadow-lg transition-all hover:bg-red-600/20 hover:scale-105 active:scale-95"
             >
               🔪 Unirse a Partida
+            </button>
+
+            <button
+              onClick={handleGameMasterLogin}
+              className="w-full rounded-lg border-2 border-yellow-600 bg-transparent px-8 py-4 text-lg font-semibold text-yellow-100 shadow-lg transition-all hover:bg-yellow-600/20 hover:scale-105 active:scale-95"
+            >
+              👑 Soy GameMaster
             </button>
           </div>
 

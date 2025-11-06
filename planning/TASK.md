@@ -116,6 +116,39 @@
 
 ---
 
+### TASK-101.5: Login de GameMaster (Re-acceso a Partida)
+**Prioridad:** 🟡 ALTA
+**Estimación:** 2 horas
+**Dependencias:** TASK-101
+**HU relacionadas:** HU-GM01
+
+**Subtareas:**
+- [ ] Crear página `/gamemaster/login`
+- [ ] Input para código de partida
+- [ ] Input para PIN
+- [ ] API route `/api/gamemaster/login`
+- [ ] Validar código + PIN hasheado
+- [ ] Guardar session token en localStorage
+- [ ] Redirigir a dashboard del GameMaster
+- [ ] Agregar botón "Soy GameMaster" en landing page
+
+**Criterios de aceptación:**
+- ✅ GameMaster puede re-ingresar con código + PIN
+- ✅ PIN se valida contra hash en DB
+- ✅ Mensaje de error si código o PIN incorrectos
+- ✅ Session se guarda en localStorage
+- ✅ Redirección correcta al dashboard
+
+**Testing manual:**
+1. Cerrar sesión / Abrir navegador en incógnito
+2. Click en "Soy GameMaster" desde landing
+3. Ingresar código de partida existente
+4. Ingresar PIN correcto
+5. Verificar redirección a dashboard
+6. Intentar con PIN incorrecto y verificar error
+
+---
+
 ### TASK-102: Unirse a Partida (Killer)
 **Prioridad:** 🔴 CRÍTICA
 **Estimación:** 3 horas

@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function JoinGame() {
+export default function GameMasterLogin() {
   const router = useRouter();
-  const [playerName, setPlayerName] = useState('');
   const [gameCode, setGameCode] = useState('');
+  const [pin, setPin] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -15,45 +15,45 @@ export default function JoinGame() {
     setError('');
 
     // Validaciones
-    if (!playerName.trim()) {
-      setError('Debes ingresar tu nombre');
+    if (!gameCode.trim() || gameCode.length !== 6) {
+      setError('El código de partida debe tener 6 caracteres');
       return;
     }
 
-    if (!gameCode.trim() || gameCode.length !== 6) {
-      setError('El código de partida debe tener 6 caracteres');
+    if (!/^\d{4,6}$/.test(pin)) {
+      setError('El PIN debe tener entre 4 y 6 dígitos');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/game/join', {
+      const response = await fetch('/api/gamemaster/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          playerName: playerName.trim(),
           gameCode: gameCode.trim().toUpperCase(),
+          pin: pin,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Error al unirse a la partida');
+        setError(data.error || 'Error al iniciar sesión');
         setIsLoading(false);
         return;
       }
 
       // Guardar información en localStorage
-      localStorage.setItem('playerId', data.player.id);
-      localStorage.setItem('playerName', data.player.name);
+      localStorage.setItem('playerId', data.gameMaster.id);
+      localStorage.setItem('playerName', data.gameMaster.name);
       localStorage.setItem('gameId', data.game.id);
-      localStorage.setItem('isGameMaster', 'false');
+      localStorage.setItem('isGameMaster', 'true');
 
-      // Redirigir a lobby/sala de espera
+      // Redirigir al lobby (misma vista que jugadores)
       router.push(`/game/${data.game.id}/lobby`);
 
     } catch (err) {
@@ -69,8 +69,8 @@ export default function JoinGame() {
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="mb-2 text-4xl font-bold text-white">Unirse a Partida</h1>
-            <p className="text-red-200">Ingresa el código para jugar</p>
+            <h1 className="mb-2 text-4xl font-bold text-white">Login GameMaster</h1>
+            <p className="text-red-200">Ingresa a tu partida existente</p>
           </div>
 
           {/* Form */}
@@ -93,20 +93,22 @@ export default function JoinGame() {
               />
             </div>
 
-            {/* Nombre del jugador */}
+            {/* PIN */}
             <div>
-              <label htmlFor="name" className="mb-2 block text-sm font-medium text-red-100">
-                Tu Nombre
+              <label htmlFor="pin" className="mb-2 block text-sm font-medium text-red-100">
+                PIN de GameMaster
               </label>
               <input
-                type="text"
-                id="name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Ingresa tu nombre"
+                type="password"
+                id="pin"
+                inputMode="numeric"
+                pattern="\d{4,6}"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="1234"
                 className="w-full rounded-lg border-2 border-red-600 bg-black/50 px-4 py-3 text-white placeholder-gray-400 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                 required
-                maxLength={50}
                 disabled={isLoading}
               />
             </div>
@@ -121,10 +123,10 @@ export default function JoinGame() {
             {/* Submit button */}
             <button
               type="submit"
-              disabled={isLoading || !playerName.trim() || !gameCode.trim()}
+              disabled={isLoading || !gameCode.trim() || !pin}
               className="w-full rounded-lg bg-red-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:scale-105 hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
             >
-              {isLoading ? '⏳ Uniéndose...' : '🎯 Unirse a Partida'}
+              {isLoading ? '⏳ Ingresando...' : '👑 Ingresar como GameMaster'}
             </button>
 
             {/* Back button */}
@@ -142,4 +144,3 @@ export default function JoinGame() {
     </div>
   );
 }
-

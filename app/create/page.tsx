@@ -56,14 +56,14 @@ export default function CreateGame() {
         return;
       }
 
-      // Guardar información en localStorage
+            // Guardar en localStorage
       localStorage.setItem('playerId', data.gameMaster.id);
-      localStorage.setItem('playerName', data.gameMaster.name);
       localStorage.setItem('gameId', data.game.id);
+      localStorage.setItem('playerName', data.gameMaster.name);
       localStorage.setItem('isGameMaster', 'true');
 
-      // Redirigir al dashboard del GameMaster
-      router.push(`/game/${data.game.id}/dashboard`);
+      // Redirigir al lobby (misma vista que jugadores, pero con controles GM)
+      router.push(`/game/${data.game.id}/lobby`);
 
     } catch (err) {
       console.error('Error:', err);
