@@ -108,43 +108,54 @@ export async function POST(request: Request) {
       // No es crítico, continuar
     }
 
-    // 4. HERENCIA DEL OBJETIVO
-    // Obtener la asignación de la víctima (su objetivo)
-    const { data: victimAssignment, error: victimAssignmentError } = await supabase
-      .from('assignments')
-      .select('*')
-      .eq('hunter_id', victimId)
-      .eq('is_active', true)
-      .single();
+    // 4. Verificar cuántos jugadores quedan vivos ANTES de la herencia
+    const { data: alivePlayersCheck, error: aliveCheckError } = await supabase
+      .from('players')
+      .select('id')
+      .eq('game_id', event.game_id)
+      .eq('is_alive', true)
+      .eq('is_game_master', false);
 
-    if (victimAssignmentError) {
-      console.error('Error fetching victim assignment:', victimAssignmentError);
-    }
+    const aliveCount = alivePlayersCheck?.length || 0;
 
-    // Desactivar la asignación actual del asesino
-    const { error: deactivateError } = await supabase
-      .from('assignments')
-      .update({ is_active: false })
-      .eq('hunter_id', event.killer_id)
-      .eq('is_active', true);
+    // 5. HERENCIA DEL OBJETIVO (solo si quedan más de 1 jugador vivo)
+    if (aliveCount > 1) {
+      // Obtener la asignación de la víctima (su objetivo)
+      const { data: victimAssignment, error: victimAssignmentError } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('hunter_id', victimId)
+        .eq('is_active', true)
+        .single();
 
-    if (deactivateError) {
-      console.error('Error deactivating hunter assignment:', deactivateError);
-    }
+      if (victimAssignmentError) {
+        console.error('Error fetching victim assignment:', victimAssignmentError);
+      }
 
-    // Desactivar la asignación de la víctima
-    const { error: deactivateVictimError } = await supabase
-      .from('assignments')
-      .update({ is_active: false })
-      .eq('hunter_id', victimId)
-      .eq('is_active', true);
+      // Desactivar la asignación actual del asesino
+      const { error: deactivateError } = await supabase
+        .from('assignments')
+        .update({ is_active: false })
+        .eq('hunter_id', event.killer_id)
+        .eq('is_active', true);
 
-    if (deactivateVictimError) {
-      console.error('Error deactivating victim assignment:', deactivateVictimError);
-    }
+      if (deactivateError) {
+        console.error('Error deactivating hunter assignment:', deactivateError);
+      }
 
-    // Si la víctima tenía un objetivo, heredarlo
-    if (victimAssignment) {
+      // Desactivar la asignación de la víctima
+      const { error: deactivateVictimError } = await supabase
+        .from('assignments')
+        .update({ is_active: false })
+        .eq('hunter_id', victimId)
+        .eq('is_active', true);
+
+      if (deactivateVictimError) {
+        console.error('Error deactivating victim assignment:', deactivateVictimError);
+      }
+
+      // Si la víctima tenía un objetivo, heredarlo
+      if (victimAssignment) {
       // El asesino hereda el objetivo de la víctima con nuevas condiciones
       // Obtener un lugar aleatorio
       const { data: locations } = await supabase
@@ -218,8 +229,57 @@ export async function POST(request: Request) {
         });
       }
     }
+    } else {
+      // Es el último jugador - GANADOR!
+      // Desactivar todas las asignaciones
+      await supabase
+        .from('assignments')
+        .update({ is_active: false })
+        .eq('game_id', event.game_id)
+        .eq('is_active', true);
 
-    // 5. Crear notificación pública
+      // Marcar el juego como terminado
+      await supabase
+        .from('games')
+        .update({
+          status: 'finished',
+          end_time: new Date().toISOString(),
+        })
+        .eq('id', event.game_id);
+
+      // Obtener nombre del ganador
+      const { data: winner } = await supabase
+        .from('players')
+        .select('name')
+        .eq('id', event.killer_id)
+        .single();
+
+      // Notificar al ganador
+      await supabase.from('notifications').insert({
+        game_id: event.game_id,
+        player_id: event.killer_id,
+        type: 'private',
+        message: `🏆 ¡FELICITACIONES! Eres el ganador de RucaKiller`,
+        read: false,
+      });
+
+      // Notificación pública del ganador
+      await supabase.from('notifications').insert({
+        game_id: event.game_id,
+        player_id: null,
+        type: 'public',
+        message: `🏆 ¡${winner?.name || 'Un jugador'} ha ganado el juego!`,
+        read: false,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Asesinato confirmado. ¡Hay un ganador!',
+        winner: true,
+      });
+    }
+
+    // 6. Crear notificación pública (solo si no hay ganador)
     await supabase.from('notifications').insert({
       game_id: event.game_id,
       player_id: null,
@@ -228,45 +288,14 @@ export async function POST(request: Request) {
       read: false,
     });
 
-    // 6. Verificar si quedan jugadores vivos
-    const { data: alivePlayers, error: aliveError } = await supabase
-      .from('players')
-      .select('id')
-      .eq('game_id', event.game_id)
-      .eq('is_alive', true)
-      .eq('is_game_master', false);
-
-    if (!aliveError && alivePlayers) {
-      const aliveCount = alivePlayers.length;
-
-      if (aliveCount === 1) {
-        // ¡Hay un ganador!
-        await supabase
-          .from('games')
-          .update({
-            status: 'finished',
-            end_time: new Date().toISOString(),
-          })
-          .eq('id', event.game_id);
-
-        await supabase.from('notifications').insert({
-          game_id: event.game_id,
-          player_id: null,
-          type: 'public',
-          message: '🏆 ¡El juego ha terminado! Hay un ganador',
-          read: false,
-        });
-      } else {
-        // Notificar cuántos quedan vivos
-        await supabase.from('notifications').insert({
-          game_id: event.game_id,
-          player_id: null,
-          type: 'public',
-          message: `Quedan ${aliveCount} jugadores vivos`,
-          read: false,
-        });
-      }
-    }
+    // 7. Notificar cuántos quedan vivos
+    await supabase.from('notifications').insert({
+      game_id: event.game_id,
+      player_id: null,
+      type: 'public',
+      message: `Quedan ${aliveCount} jugadores vivos`,
+      read: false,
+    });
 
     return NextResponse.json({
       success: true,

@@ -178,7 +178,19 @@ export default function GamePage() {
 
         {/* Assignment card - solo si está vivo */}
         {player.is_alive ? (
-          <AssignmentCard gameId={gameId} playerId={player.id} />
+          game.status === 'finished' ? (
+            <div className="rounded-xl bg-gradient-to-br from-yellow-600/50 to-yellow-700/50 p-8 backdrop-blur-sm border-2 border-yellow-400/50 text-center">
+              <p className="text-6xl mb-4">🏆</p>
+              <p className="text-3xl font-bold text-yellow-100 mb-2">¡GANADOR!</p>
+              <p className="text-xl text-yellow-200">Has ganado RucaKiller</p>
+              <div className="mt-6 rounded-lg bg-black/40 p-4">
+                <p className="text-sm text-yellow-100/80">Total de asesinatos</p>
+                <p className="text-4xl font-bold text-yellow-300">{player.kill_count}</p>
+              </div>
+            </div>
+          ) : (
+            <AssignmentCard gameId={gameId} playerId={player.id} />
+          )
         ) : (
           <div className="rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 backdrop-blur-sm border-2 border-gray-500/50 text-center">
             <p className="text-4xl mb-4">☠️</p>
