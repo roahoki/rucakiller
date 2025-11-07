@@ -14,6 +14,8 @@ export default function GameLobby() {
   const [loading, setLoading] = useState(true);
   const [isConfigured, setIsConfigured] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -81,8 +83,30 @@ export default function GameLobby() {
       )
       .subscribe();
 
+    // Suscribirse a cambios en el estado del juego
+    const gameSubscription = supabase
+      .channel(`game-${gameId}-status`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'games',
+          filter: `id=eq.${gameId}`,
+        },
+        (payload) => {
+          const newGame = payload.new as Game;
+          // Si el juego cambió a "active", redirigir
+          if (newGame.status === 'active') {
+            window.location.href = `/game/${gameId}`;
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       playersSubscription.unsubscribe();
+      gameSubscription.unsubscribe();
     };
   }, [gameId]);
 
@@ -109,6 +133,37 @@ export default function GameLobby() {
   const playerName = localStorage.getItem('playerName') || 'Jugador';
   const isGameMaster = localStorage.getItem('isGameMaster') === 'true';
   const gameMaster = players.find((p) => p.is_game_master);
+
+  const handleStartGame = async () => {
+    setError('');
+    setIsStarting(true);
+
+    try {
+      const response = await fetch('/api/game/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gameId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Error al iniciar el juego');
+        setIsStarting(false);
+        return;
+      }
+
+      // El juego se inició correctamente, redirigir automáticamente cuando el estado cambie
+      // (El useEffect detectará el cambio de estado via Realtime)
+
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error inesperado al iniciar el juego');
+      setIsStarting(false);
+    }
+  };
 
   return (
     <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
@@ -176,11 +231,23 @@ export default function GameLobby() {
                       <button 
                         onClick={() => setShowConfig(true)}
                         className="mb-2 w-full rounded-lg border-2 border-yellow-600 bg-yellow-600/20 px-6 py-2 text-sm font-semibold text-yellow-100 transition-all hover:scale-105 hover:bg-yellow-600/30 active:scale-95"
+                        disabled={isStarting}
                       >
                         ⚙️ Re-configurar
                       </button>
-                      <button className="w-full rounded-lg bg-green-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-green-700 active:scale-95">
-                        🎮 Iniciar Juego
+                      
+                      {error && (
+                        <div className="mb-4 rounded-lg border border-red-600 bg-red-900/50 p-3 text-sm text-red-200">
+                          {error}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleStartGame}
+                        disabled={isStarting}
+                        className="w-full rounded-lg bg-green-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-green-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isStarting ? '⏳ Iniciando...' : '🎮 Iniciar Juego'}
                       </button>
                     </>
                   ) : (
