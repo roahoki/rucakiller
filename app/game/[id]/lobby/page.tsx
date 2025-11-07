@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Game, Player } from '@/lib/types';
+import GameSetup from './GameSetup';
 
 export default function GameLobby() {
   const params = useParams();
@@ -11,6 +12,8 @@ export default function GameLobby() {
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -39,6 +42,21 @@ export default function GameLobby() {
       } else {
         setPlayers(playersData || []);
       }
+
+      // Verificar si el juego ya está configurado (lugares y armas)
+      const { data: locationsData } = await supabase
+        .from('locations')
+        .select('id')
+        .eq('game_id', gameId);
+
+      const { data: weaponsData } = await supabase
+        .from('weapons')
+        .select('id')
+        .eq('game_id', gameId);
+
+      const hasLocations = (locationsData?.length || 0) >= 5;
+      const hasWeapons = (weaponsData?.length || 0) >= 18;
+      setIsConfigured(hasLocations && hasWeapons);
 
       setLoading(false);
     };
@@ -141,30 +159,67 @@ export default function GameLobby() {
           </div>
 
           {/* Mensaje de espera o controles GM */}
-          <div className="rounded-lg bg-black/30 p-6 text-center backdrop-blur-sm">
-            {isGameMaster ? (
-              <>
-                <p className="mb-4 text-lg font-semibold text-yellow-400">
-                  Eres el GameMaster de esta partida
-                </p>
-                <button className="rounded-lg bg-green-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-green-700 active:scale-95">
-                  🎮 Iniciar Juego
-                </button>
-                <p className="mt-4 text-sm text-gray-400">
-                  Configuración y gestión próximamente...
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="mb-2 text-lg text-red-200">
-                  Esperando a que <span className="font-bold text-yellow-400">{gameMaster?.name}</span> inicie el juego...
-                </p>
-                <p className="text-sm text-gray-400">
-                  Los jugadores se actualizarán en tiempo real
-                </p>
-              </>
-            )}
-          </div>
+          {isGameMaster ? (
+            <>
+              {/* Botón de configuración */}
+              {!showConfig && (
+                <div className="mb-6 rounded-lg bg-black/30 p-6 text-center backdrop-blur-sm">
+                  <p className="mb-4 text-lg font-semibold text-yellow-400">
+                    Eres el GameMaster de esta partida
+                  </p>
+                  
+                  {isConfigured ? (
+                    <>
+                      <div className="mb-4 rounded-lg bg-green-900/50 p-3 text-green-300">
+                        ✅ Juego configurado correctamente
+                      </div>
+                      <button 
+                        onClick={() => setShowConfig(true)}
+                        className="mb-2 w-full rounded-lg border-2 border-yellow-600 bg-yellow-600/20 px-6 py-2 text-sm font-semibold text-yellow-100 transition-all hover:scale-105 hover:bg-yellow-600/30 active:scale-95"
+                      >
+                        ⚙️ Re-configurar
+                      </button>
+                      <button className="w-full rounded-lg bg-green-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-green-700 active:scale-95">
+                        🎮 Iniciar Juego
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-4 rounded-lg bg-yellow-900/50 p-3 text-yellow-300">
+                        ⚠️ Debes configurar lugares y armas antes de iniciar
+                      </div>
+                      <button 
+                        onClick={() => setShowConfig(true)}
+                        className="w-full rounded-lg bg-yellow-600 px-8 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-yellow-700 active:scale-95"
+                      >
+                        ⚙️ Configurar Juego
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Componente de configuración */}
+              {showConfig && (
+                <GameSetup 
+                  gameId={gameId} 
+                  onConfigComplete={() => {
+                    setIsConfigured(true);
+                    setShowConfig(false);
+                  }} 
+                />
+              )}
+            </>
+          ) : (
+            <div className="rounded-lg bg-black/30 p-6 text-center backdrop-blur-sm">
+              <p className="mb-2 text-lg text-red-200">
+                Esperando a que <span className="font-bold text-yellow-400">{gameMaster?.name}</span> inicie el juego...
+              </p>
+              <p className="text-sm text-gray-400">
+                Los jugadores se actualizarán en tiempo real
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
