@@ -38,8 +38,9 @@ export async function POST(request: Request) {
     }
 
     if (!confirmed) {
-      // RECHAZAR EL ASESINATO
-      // Marcar evento como cancelado (podríamos usar un campo 'cancelled' o simplemente eliminarlo)
+      // RECHAZAR EL ASESINATO - CASTIGO: EL ASESINO MUERE
+      
+      // 1. Eliminar el evento
       const { error: deleteError } = await supabase
         .from('events')
         .delete()
@@ -53,18 +54,103 @@ export async function POST(request: Request) {
         );
       }
 
-      // Notificar al asesino que fue rechazado
+      // 2. MATAR AL ASESINO (como castigo por intentar sin cumplir condiciones)
+      const { error: killHunterError } = await supabase
+        .from('players')
+        .update({ is_alive: false })
+        .eq('id', event.killer_id);
+
+      if (killHunterError) {
+        console.error('Error killing hunter:', killHunterError);
+        return NextResponse.json(
+          { error: 'Error al aplicar castigo' },
+          { status: 500 }
+        );
+      }
+
+      // 3. Desactivar la asignación del asesino (ya está muerto)
+      await supabase
+        .from('assignments')
+        .update({ is_active: false })
+        .eq('hunter_id', event.killer_id)
+        .eq('is_active', true);
+
+      // 4. Obtener nombre del asesino para notificaciones
+      const { data: killerData } = await supabase
+        .from('players')
+        .select('name')
+        .eq('id', event.killer_id)
+        .single();
+
+      const killerName = killerData?.name || 'Un jugador';
+
+      // 5. Notificar al asesino que murió por intentar sin condiciones correctas
       await supabase.from('notifications').insert({
         game_id: event.game_id,
         player_id: event.killer_id,
         type: 'private',
-        message: 'Tu intento de asesinato fue rechazado por la víctima.',
+        message: '💀 Tu intento de asesinato fue rechazado. Has sido eliminado por intentar asesinar sin cumplir las condiciones.',
+        read: false,
+      });
+
+      // 6. Notificación pública
+      await supabase.from('notifications').insert({
+        game_id: event.game_id,
+        player_id: null,
+        type: 'public',
+        message: `⚖️ ${killerName} fue eliminado por intentar un asesinato sin cumplir las condiciones`,
+        read: false,
+      });
+
+      // 7. Verificar cuántos jugadores quedan vivos
+      const { data: alivePlayersCheck } = await supabase
+        .from('players')
+        .select('id, name')
+        .eq('game_id', event.game_id)
+        .eq('is_alive', true)
+        .eq('is_game_master', false);
+
+      const aliveCount = alivePlayersCheck?.length || 0;
+
+      // 8. Si solo queda 1 jugador, hay un ganador
+      if (aliveCount === 1) {
+        // Desactivar todas las asignaciones
+        await supabase
+          .from('assignments')
+          .update({ is_active: false })
+          .eq('game_id', event.game_id)
+          .eq('is_active', true);
+
+        // Marcar el juego como terminado
+        await supabase
+          .from('games')
+          .update({
+            status: 'finished',
+            end_time: new Date().toISOString(),
+          })
+          .eq('id', event.game_id);
+
+        return NextResponse.json({
+          success: true,
+          message: 'Asesinato rechazado. El asesino ha sido eliminado. ¡Hay un ganador!',
+          winner: true,
+          killerDied: true,
+        });
+      }
+
+      // 9. Notificar cuántos quedan
+      await supabase.from('notifications').insert({
+        game_id: event.game_id,
+        player_id: null,
+        type: 'public',
+        message: `Quedan ${aliveCount} jugadores vivos`,
         read: false,
       });
 
       return NextResponse.json({
         success: true,
-        message: 'Asesinato rechazado',
+        message: 'Asesinato rechazado. El asesino ha sido eliminado.',
+        killerDied: true,
       });
     }
 
