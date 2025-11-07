@@ -38,6 +38,7 @@ export default function SpecialPowerModal({
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [result, setResult] = useState<string | null>(null);
+  const [shouldUpdate, setShouldUpdate] = useState(false);  // Flag para indicar que se usó el poder
   
   // Para Saboteador
   const [changeType, setChangeType] = useState<'location' | 'weapon'>('location');
@@ -103,6 +104,7 @@ export default function SpecialPowerModal({
     }
 
     setLoading(true);
+    console.log('🎯 Iniciando poder Espía...');
 
     try {
       const response = await fetch('/api/power/espia', {
@@ -116,17 +118,20 @@ export default function SpecialPowerModal({
       });
 
       const data = await response.json();
+      console.log('📦 Respuesta del servidor:', data);
 
       if (response.ok) {
+        console.log('✅ Éxito! Actualizando resultado con:', data.message);
         setResult(data.message);
+        setShouldUpdate(true);  // Marcar para actualizar al cerrar
         setLoading(false);
-        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
+        console.error('❌ Error en la respuesta:', data);
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('💥 Excepción capturada:', error);
       alert('Error al usar el poder');
       setLoading(false);
     }
@@ -134,6 +139,7 @@ export default function SpecialPowerModal({
 
   const handleDetective = async () => {
     setLoading(true);
+    console.log('🔍 Iniciando poder Detective...');
 
     try {
       const response = await fetch('/api/power/detective', {
@@ -146,17 +152,20 @@ export default function SpecialPowerModal({
       });
 
       const data = await response.json();
+      console.log('📦 Respuesta del servidor:', data);
 
       if (response.ok) {
+        console.log('✅ Éxito! Actualizando resultado con:', data.message);
         setResult(data.message);
+        setShouldUpdate(true);  // Marcar para actualizar al cerrar
         setLoading(false);
-        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
+        console.error('❌ Error en la respuesta:', data);
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('💥 Excepción capturada:', error);
       alert('Error al usar el poder');
       setLoading(false);
     }
@@ -169,6 +178,7 @@ export default function SpecialPowerModal({
     }
 
     setLoading(true);
+    console.log('💣 Iniciando poder Saboteador...');
 
     try {
       const response = await fetch('/api/power/saboteador', {
@@ -184,40 +194,70 @@ export default function SpecialPowerModal({
       });
 
       const data = await response.json();
+      console.log('📦 Respuesta del servidor:', data);
 
       if (response.ok) {
+        console.log('✅ Éxito! Actualizando resultado con:', data.message);
         setResult(data.message);
+        setShouldUpdate(true);  // Marcar para actualizar al cerrar
         setLoading(false);
-        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
+        console.error('❌ Error en la respuesta:', data);
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('💥 Excepción capturada:', error);
       alert('Error al usar el poder');
       setLoading(false);
     }
   };
 
   const handleSubmit = () => {
+    console.log('🚀 handleSubmit llamado para:', playerCharacter);
     if (playerCharacter === 'espia') handleEspia();
     else if (playerCharacter === 'detective') handleDetective();
     else if (playerCharacter === 'saboteador') handleSaboteador();
   };
 
+  const handleClose = () => {
+    console.log('🔒 Cerrando modal...');
+    // Solo actualizar datos del jugador si se usó el poder
+    if (shouldUpdate) {
+      console.log('🔄 Actualizando datos del jugador...');
+      onSuccess();
+    }
+    onClose();
+  };
+
+  console.log('🎭 Modal renderizado. Estado actual:');
+  console.log('  - loading:', loading);
+  console.log('  - result:', result);
+  console.log('  - playerCharacter:', playerCharacter);
+  console.log('  - ¿Mostrar resultado?', result !== null);
+
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div 
+        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" 
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!loading) onClose();
+        }} 
+      />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-md rounded-xl bg-gradient-to-br from-purple-900 to-purple-950 p-6 shadow-2xl border-2 border-purple-500/50">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div 
+          className="relative w-full max-w-md rounded-xl bg-gradient-to-br from-purple-900 to-purple-950 p-6 shadow-2xl border-2 border-purple-500/50 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close button */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 text-white/70 hover:text-white text-2xl"
+            disabled={loading}
           >
             ×
           </button>
@@ -240,10 +280,7 @@ export default function SpecialPowerModal({
               
               {/* Botón para cerrar y actualizar */}
               <button
-                onClick={() => {
-                  onSuccess(); // Actualiza los datos del jugador
-                  onClose(); // Cierra el modal
-                }}
+                onClick={handleClose}
                 className="w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 transition-colors"
               >
                 Entendido

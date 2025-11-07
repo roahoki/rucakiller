@@ -18,6 +18,12 @@ export default function GamePage() {
   const [winner, setWinner] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPowerModal, setShowPowerModal] = useState(false);
+  
+  // Guardar props del modal para evitar que se recree cuando player cambia
+  const [powerModalProps, setPowerModalProps] = useState<{
+    playerId: string;
+    playerCharacter: 'espia' | 'detective' | 'saboteador';
+  } | null>(null);
 
   useEffect(() => {
     const fetchGameAndPlayer = async () => {
@@ -200,11 +206,12 @@ export default function GamePage() {
       <KillConfirmationModal gameId={gameId} playerId={player.id} />
       
       {/* Special Power Modal */}
-      {showPowerModal && player.special_character && !player.special_character_used && (
+      {showPowerModal && powerModalProps && (
         <SpecialPowerModal
+          key={powerModalProps.playerId} 
           gameId={gameId}
-          playerId={player.id}
-          playerCharacter={player.special_character}
+          playerId={powerModalProps.playerId}
+          playerCharacter={powerModalProps.playerCharacter}
           onClose={() => setShowPowerModal(false)}
           onSuccess={() => {
             // Recargar datos del jugador
@@ -346,7 +353,13 @@ export default function GamePage() {
                   </span>
                 ) : (
                   <button
-                    onClick={() => setShowPowerModal(true)}
+                    onClick={() => {
+                      setPowerModalProps({
+                        playerId: player.id,
+                        playerCharacter: player.special_character as 'espia' | 'detective' | 'saboteador'
+                      });
+                      setShowPowerModal(true);
+                    }}
                     className="mt-3 w-full rounded-lg bg-purple-600 py-2 font-semibold text-white hover:bg-purple-500 transition-colors"
                   >
                     ⚡ Usar Poder

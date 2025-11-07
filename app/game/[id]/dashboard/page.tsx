@@ -20,6 +20,7 @@ export default function GameMasterDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [pausing, setPausing] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -212,6 +213,48 @@ export default function GameMasterDashboard() {
     setPausing(false);
   };
 
+  const handleEndGame = async () => {
+    if (!game) return;
+
+    const confirmEnd = window.confirm(
+      '¿Estás seguro de que quieres terminar la partida? Esta acción no se puede deshacer.'
+    );
+
+    if (!confirmEnd) return;
+
+    setEnding(true);
+
+    const { error } = await supabase
+      .from('games')
+      .update({ status: 'completed' })
+      .eq('id', gameId);
+
+    if (error) {
+      console.error('Error ending game:', error);
+      alert('Error al terminar la partida');
+      setEnding(false);
+    } else {
+      // Crear notificación pública
+      await supabase.from('notifications').insert({
+        game_id: gameId,
+        player_id: null,
+        type: 'public',
+        message: '🏁 El juego ha terminado',
+        read: false,
+      });
+
+      alert('Partida finalizada exitosamente');
+      setEnding(false);
+    }
+  };
+
+  const handleBackToMenu = () => {
+    // Limpiar autenticación de GameMaster
+    localStorage.removeItem('isGameMaster');
+    // Redirigir a la página principal
+    router.push('/');
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
@@ -292,6 +335,25 @@ export default function GameMasterDashboard() {
             </button>
           </div>
         )}
+
+        {/* End Game and Back to Menu Buttons */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(game.status === 'active' || game.status === 'paused') && (
+            <button
+              onClick={handleEndGame}
+              disabled={ending}
+              className="rounded-xl p-4 font-bold text-white shadow-lg transition-all bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {ending ? 'Finalizando...' : '🏁 Terminar Partida'}
+            </button>
+          )}
+          <button
+            onClick={handleBackToMenu}
+            className="rounded-xl p-4 font-bold text-white shadow-lg transition-all bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 hover:shadow-xl active:scale-95"
+          >
+            🏠 Volver al Menú Principal
+          </button>
+        </div>
 
         {/* Players List */}
         <div className="mb-6 rounded-xl bg-black/30 p-6 backdrop-blur-sm">
