@@ -33,10 +33,10 @@ export default function Home() {
       <div className="flex h-full w-full items-center justify-center">
         <div className="w-full max-w-md text-center">
           {/* Logo/Title */}
-          <h1 className="mb-2 text-7xl font-bold tracking-tight text-white drop-shadow-lg">
+          <h1 className="mb-2 text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white drop-shadow-lg">
             RUCAKILLER
           </h1>
-          <p className="mb-12 text-xl text-red-200">Juego de asesinatos secretos en rucakaru</p>
+          <p className="mb-12 text-lg sm:text-xl text-red-200">Juego de asesinatos secretos en rucakaru</p>
           
           {/* Main Action Buttons */}
           <div className="mb-8 space-y-4">
