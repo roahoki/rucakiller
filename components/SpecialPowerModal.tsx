@@ -119,10 +119,8 @@ export default function SpecialPowerModal({
 
       if (response.ok) {
         setResult(data.message);
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 3000);
+        setLoading(false);
+        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
@@ -151,10 +149,8 @@ export default function SpecialPowerModal({
 
       if (response.ok) {
         setResult(data.message);
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 4000);
+        setLoading(false);
+        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
@@ -191,10 +187,8 @@ export default function SpecialPowerModal({
 
       if (response.ok) {
         setResult(data.message);
-        setTimeout(() => {
-          onSuccess();
-          onClose();
-        }, 3000);
+        setLoading(false);
+        // No cerrar automáticamente, dejar que el usuario cierre manualmente
       } else {
         alert(data.error || 'Error al usar el poder');
         setLoading(false);
@@ -233,8 +227,27 @@ export default function SpecialPowerModal({
           </h2>
 
           {result ? (
-            <div className="rounded-lg bg-green-900/30 p-4 border border-green-500/50">
-              <p className="text-green-100 text-center">{result}</p>
+            <div className="space-y-4">
+              {/* Resultado destacado */}
+              <div className="rounded-lg bg-gradient-to-br from-green-900/50 to-green-800/50 p-6 border-2 border-green-500/50 shadow-xl">
+                <div className="flex items-center justify-center mb-3">
+                  <span className="text-4xl">✅</span>
+                </div>
+                <p className="text-green-100 text-center text-lg font-semibold leading-relaxed">
+                  {result}
+                </p>
+              </div>
+              
+              {/* Botón para cerrar y actualizar */}
+              <button
+                onClick={() => {
+                  onSuccess(); // Actualiza los datos del jugador
+                  onClose(); // Cierra el modal
+                }}
+                className="w-full rounded-lg bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 transition-colors"
+              >
+                Entendido
+              </button>
             </div>
           ) : (
             <>
