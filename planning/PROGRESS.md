@@ -2,7 +2,7 @@
 
 **Última actualización:** 7 de noviembre, 2025  
 **Versión:** MVP Core (v0.1)  
-**Progreso General:** 40% completado
+**Progreso General:** 52% completado
 
 ---
 
@@ -41,6 +41,16 @@ feat(task-105): implementar algoritmo de asignación circular
 ### Commit 7: Vista del jugador - Ver objetivo
 ```
 feat(task-106): implementar vista del jugador con AssignmentCard y Realtime
+```
+
+### Commit 8: Validación de intento de asesinato
+```
+feat(task-107): implementar validación de intento de asesinato
+```
+
+### Commit 9: Confirmación y herencia de objetivo
+```
+feat(task-108): implementar confirmación de asesinato y herencia de objetivo
 ```
 
 ---
@@ -88,19 +98,25 @@ feat(task-106): implementar vista del jugador con AssignmentCard y Realtime
 - ✅ Indicador de juego pausado
 - ✅ Badges para personajes especiales y poderes
 
+### 7. Sistema de Asesinatos
+- ✅ Botón "He asesinado" en vista del jugador
+- ✅ API /api/kill/attempt con validaciones completas
+- ✅ Validar estado del juego y jugadores
+- ✅ Modal KillConfirmationModal para víctimas
+- ✅ Confirmar o rechazar asesinatos
+- ✅ API /api/kill/confirm con lógica de herencia
+- ✅ Marcar víctima como muerta
+- ✅ Incrementar kill_count del asesino
+- ✅ Herencia automática del objetivo
+- ✅ Reasignación de armas (liberar y asignar)
+- ✅ Generar nuevas condiciones (lugar y arma)
+- ✅ Detección de ganador (1 jugador vivo)
+- ✅ Notificaciones públicas y privadas
+- ✅ Actualización en tiempo real con Realtime
+
 ---
 
 ## 🚧 Próximas Tareas Prioritarias
-
-### TASK-107: Validar Asesinato (Jugador)
-**Estimación:** 5 horas  
-**Prioridad:** 🔴 CRÍTICA
-
-**Qué debe hacer:**
-- Botón "He asesinado a [nombre]"
-- Confirmación de la víctima
-- Validación de lugar y arma
-- Herencia automática del objetivo
 
 ### TASK-109: Dashboard del GameMaster
 **Estimación:** 6 horas  

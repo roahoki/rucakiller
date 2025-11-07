@@ -1,34 +1,216 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import type { Game } from '@/lib/types';
+import type { Game, Player, Assignment, Event } from '@/lib/types';
+
+interface AssignmentWithPlayers extends Assignment {
+  hunter_name?: string;
+  target_name?: string;
+}
 
 export default function GameMasterDashboard() {
   const params = useParams();
+  const router = useRouter();
   const gameId = params.id as string;
   const [game, setGame] = useState<Game | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentWithPlayers[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pausing, setPausing] = useState(false);
 
   useEffect(() => {
-    const fetchGame = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      // Verificar autenticación de GameMaster
+      const isGameMaster = localStorage.getItem('isGameMaster') === 'true';
+      if (!isGameMaster) {
+        router.push(`/game/${gameId}`);
+        return;
+      }
+
+      // Obtener juego
+      const { data: gameData, error: gameError } = await supabase
         .from('games')
         .select('*')
         .eq('id', gameId)
         .single();
 
-      if (error) {
-        console.error('Error fetching game:', error);
-      } else {
-        setGame(data);
+      if (gameError) {
+        console.error('Error fetching game:', gameError);
+        setLoading(false);
+        return;
       }
+
+      setGame(gameData);
+
+      // Obtener jugadores
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('created_at', { ascending: true });
+
+      if (playersError) {
+        console.error('Error fetching players:', playersError);
+      } else {
+        setPlayers(playersData || []);
+      }
+
+      // Obtener asignaciones activas con nombres de jugadores
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('game_id', gameId)
+        .eq('is_active', true);
+
+      if (!assignmentsError && assignmentsData) {
+        // Enriquecer asignaciones con nombres
+        const enrichedAssignments = await Promise.all(
+          assignmentsData.map(async (assignment) => {
+            const { data: hunter } = await supabase
+              .from('players')
+              .select('name')
+              .eq('id', assignment.hunter_id)
+              .single();
+
+            const { data: target } = await supabase
+              .from('players')
+              .select('name')
+              .eq('id', assignment.target_id)
+              .single();
+
+            return {
+              ...assignment,
+              hunter_name: hunter?.name,
+              target_name: target?.name,
+            };
+          })
+        );
+        setAssignments(enrichedAssignments);
+      }
+
+      // Obtener eventos confirmados
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('game_id', gameId)
+        .eq('confirmed', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!eventsError) {
+        setEvents(eventsData || []);
+      }
+
       setLoading(false);
     };
 
-    fetchGame();
-  }, [gameId]);
+    fetchData();
+
+    // Suscripciones en tiempo real
+    const playersChannel = supabase
+      .channel(`dashboard_players:${gameId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'players',
+          filter: `game_id=eq.${gameId}`,
+        },
+        () => {
+          // Refetch players
+          supabase
+            .from('players')
+            .select('*')
+            .eq('game_id', gameId)
+            .order('created_at', { ascending: true })
+            .then(({ data }) => {
+              if (data) setPlayers(data);
+            });
+        }
+      )
+      .subscribe();
+
+    const gameChannel = supabase
+      .channel(`dashboard_game:${gameId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'games',
+          filter: `id=eq.${gameId}`,
+        },
+        (payload) => {
+          setGame(payload.new as Game);
+        }
+      )
+      .subscribe();
+
+    const eventsChannel = supabase
+      .channel(`dashboard_events:${gameId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'events',
+          filter: `game_id=eq.${gameId}`,
+        },
+        () => {
+          // Refetch events
+          supabase
+            .from('events')
+            .select('*')
+            .eq('game_id', gameId)
+            .eq('confirmed', true)
+            .order('created_at', { ascending: false })
+            .limit(10)
+            .then(({ data }) => {
+              if (data) setEvents(data);
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(playersChannel);
+      supabase.removeChannel(gameChannel);
+      supabase.removeChannel(eventsChannel);
+    };
+  }, [gameId, router]);
+
+  const handlePauseResume = async () => {
+    if (!game) return;
+
+    setPausing(true);
+
+    const newStatus = game.status === 'active' ? 'paused' : 'active';
+
+    const { error } = await supabase
+      .from('games')
+      .update({ status: newStatus })
+      .eq('id', gameId);
+
+    if (error) {
+      console.error('Error updating game status:', error);
+      alert('Error al actualizar el estado del juego');
+    } else {
+      // Crear notificación pública
+      await supabase.from('notifications').insert({
+        game_id: gameId,
+        player_id: null,
+        type: 'public',
+        message: newStatus === 'paused' ? '⏸️ El juego ha sido pausado' : '▶️ El juego ha sido reanudado',
+        read: false,
+      });
+    }
+
+    setPausing(false);
+  };
 
   if (loading) {
     return (
@@ -50,32 +232,168 @@ export default function GameMasterDashboard() {
     );
   }
 
+  const alivePlayers = players.filter(p => p.is_alive && !p.is_game_master);
+  const deadPlayers = players.filter(p => !p.is_alive);
+  const totalKills = players.reduce((sum, p) => sum + p.kill_count, 0);
+
   return (
-    <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
-      <div className="h-full overflow-y-auto">
-        <div className="mx-auto max-w-4xl">
-          {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="mb-2 text-4xl font-bold text-white">Dashboard GameMaster</h1>
-            <div className="inline-block rounded-lg bg-black/50 px-6 py-3">
-              <p className="text-sm text-red-200">Código de partida:</p>
-              <p className="text-3xl font-bold text-white tracking-wider">{game.code}</p>
-            </div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
+      <div className="mx-auto max-w-6xl pb-8">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-4xl font-bold text-white">
+            👑 Dashboard GameMaster
+          </h1>
+          <div className="inline-block rounded-lg bg-black/50 px-6 py-3 backdrop-blur-sm">
+            <p className="text-sm text-red-200">Código de partida</p>
+            <p className="text-3xl font-bold tracking-wider text-white">{game.code}</p>
           </div>
+        </div>
 
-          {/* Status */}
-          <div className="mb-6 rounded-lg bg-black/30 p-6 backdrop-blur-sm">
-            <p className="mb-1 text-sm text-gray-400">Estado:</p>
-            <p className="text-lg font-semibold text-green-400 capitalize">{game.status}</p>
+        {/* Stats Grid */}
+        <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-green-500/30">
+            <p className="text-sm text-gray-400">Jugadores vivos</p>
+            <p className="text-3xl font-bold text-green-400">{alivePlayers.length}</p>
           </div>
-
-          {/* Próximamente */}
-          <div className="rounded-lg bg-black/30 p-6 text-center backdrop-blur-sm">
-            <p className="text-red-200">
-              Próximamente: Configuración del juego, gestión de jugadores y más...
+          <div className="rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-red-500/30">
+            <p className="text-sm text-gray-400">Eliminados</p>
+            <p className="text-3xl font-bold text-red-400">{deadPlayers.length}</p>
+          </div>
+          <div className="rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-yellow-500/30">
+            <p className="text-sm text-gray-400">Total asesinatos</p>
+            <p className="text-3xl font-bold text-yellow-400">{totalKills}</p>
+          </div>
+          <div className="rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-blue-500/30">
+            <p className="text-sm text-gray-400">Estado</p>
+            <p className={`text-xl font-bold capitalize ${
+              game.status === 'active' ? 'text-green-400' : 
+              game.status === 'paused' ? 'text-yellow-400' : 
+              'text-gray-400'
+            }`}>
+              {game.status}
             </p>
           </div>
         </div>
+
+        {/* Control Button */}
+        {(game.status === 'active' || game.status === 'paused') && (
+          <div className="mb-6">
+            <button
+              onClick={handlePauseResume}
+              disabled={pausing}
+              className={`w-full rounded-xl p-4 font-bold text-white shadow-lg transition-all hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                game.status === 'active'
+                  ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800'
+                  : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+              }`}
+            >
+              {pausing ? 'Procesando...' : game.status === 'active' ? '⏸️ Pausar Juego' : '▶️ Reanudar Juego'}
+            </button>
+          </div>
+        )}
+
+        {/* Players List */}
+        <div className="mb-6 rounded-xl bg-black/30 p-6 backdrop-blur-sm">
+          <h2 className="mb-4 text-2xl font-bold text-white">Jugadores</h2>
+          <div className="space-y-2">
+            {players.filter(p => !p.is_game_master).map((player) => (
+              <div
+                key={player.id}
+                className={`flex items-center justify-between rounded-lg p-4 backdrop-blur-sm ${
+                  player.is_alive
+                    ? 'bg-green-900/20 border border-green-500/30'
+                    : 'bg-gray-900/20 border border-gray-500/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">
+                    {player.is_alive ? '✅' : '☠️'}
+                  </span>
+                  <div>
+                    <p className={`font-semibold ${player.is_alive ? 'text-white' : 'text-gray-400'}`}>
+                      {player.name}
+                    </p>
+                    {player.special_character && (
+                      <span className="text-xs text-purple-300">
+                        🎭 {player.special_character}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Kills</p>
+                  <p className="text-xl font-bold text-red-400">{player.kill_count}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Assignments */}
+        {assignments.length > 0 && (
+          <div className="mb-6 rounded-xl bg-black/30 p-6 backdrop-blur-sm">
+            <h2 className="mb-4 text-2xl font-bold text-white">Asignaciones Activas</h2>
+            <div className="space-y-3">
+              {assignments.map((assignment) => (
+                <div
+                  key={assignment.id}
+                  className="rounded-lg bg-black/40 p-4 backdrop-blur-sm border border-red-500/20"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-white">
+                        {assignment.hunter_name}
+                      </span>
+                      <span className="text-red-400">→</span>
+                      <span className="font-semibold text-red-300">
+                        {assignment.target_name}
+                      </span>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p className="text-gray-400">
+                        📍 {assignment.location}
+                      </p>
+                      <p className="text-gray-400">
+                        🔪 {assignment.weapon}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Events */}
+        {events.length > 0 && (
+          <div className="rounded-xl bg-black/30 p-6 backdrop-blur-sm">
+            <h2 className="mb-4 text-2xl font-bold text-white">Historial de Asesinatos</h2>
+            <div className="space-y-2">
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-lg bg-black/40 p-3 backdrop-blur-sm border border-gray-500/20"
+                >
+                  <p className="text-sm text-gray-300">
+                    {new Date(event.created_at).toLocaleString('es-ES', {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                  <p className="text-white">
+                    ⚔️ Asesinato confirmado
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    📍 {event.location} | 🔪 {event.weapon}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
