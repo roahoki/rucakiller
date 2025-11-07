@@ -13,6 +13,7 @@ export default function GamePage() {
   const gameId = params.id as string;
   const [game, setGame] = useState<Game | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
+  const [winner, setWinner] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,6 +37,21 @@ export default function GamePage() {
       if (gameData.status === 'lobby') {
         router.push(`/game/${gameId}/lobby`);
         return;
+      }
+
+      // Si el juego terminó, obtener información del ganador
+      if (gameData.status === 'finished') {
+        const { data: winnerData } = await supabase
+          .from('players')
+          .select('*')
+          .eq('game_id', gameId)
+          .eq('is_alive', true)
+          .eq('is_game_master', false)
+          .single();
+        
+        if (winnerData) {
+          setWinner(winnerData);
+        }
       }
 
       // Obtener información del jugador desde localStorage
@@ -92,10 +108,50 @@ export default function GamePage() {
             console.log('Game paused');
           } else if (updatedGame.status === 'finished') {
             console.log('Game finished');
+            // Obtener información del ganador
+            supabase
+              .from('players')
+              .select('*')
+              .eq('game_id', gameId)
+              .eq('is_alive', true)
+              .eq('is_game_master', false)
+              .single()
+              .then(({ data }) => {
+                if (data) {
+                  setWinner(data);
+                }
+              });
           }
         }
       )
       .subscribe();
+
+    // Suscripción a cambios en el jugador (para detectar cuando muere o cambia kill_count)
+    const playerId = localStorage.getItem('playerId');
+    if (playerId) {
+      const playerChannel = supabase
+        .channel(`player:${playerId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'players',
+            filter: `id=eq.${playerId}`,
+          },
+          (payload) => {
+            const updatedPlayer = payload.new as Player;
+            setPlayer(updatedPlayer);
+            console.log('Player updated:', updatedPlayer);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(gameChannel);
+        supabase.removeChannel(playerChannel);
+      };
+    }
 
     return () => {
       supabase.removeChannel(gameChannel);
@@ -123,6 +179,17 @@ export default function GamePage() {
   }
 
   const isPaused = game.status === 'paused';
+  const isFinished = game.status === 'finished';
+  const isWinner = player.id === winner?.id;
+
+  // Función para volver al menú principal
+  const handleBackToMenu = () => {
+    localStorage.removeItem('playerId');
+    localStorage.removeItem('gameId');
+    localStorage.removeItem('playerName');
+    localStorage.removeItem('isGameMaster');
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
@@ -141,92 +208,132 @@ export default function GamePage() {
           </div>
         </div>
 
-        {/* Paused banner */}
-        {isPaused && (
-          <div className="mb-6 rounded-xl bg-yellow-600/20 p-4 backdrop-blur-sm border-2 border-yellow-500/50 animate-pulse">
-            <p className="text-center text-lg font-semibold text-yellow-200">
-              ⏸️ Juego en pausa
-            </p>
-            <p className="text-center text-sm text-yellow-100/70 mt-1">
-              El GameMaster ha pausado temporalmente el juego
-            </p>
-          </div>
-        )}
-
-        {/* Player status */}
-        <div className="mb-6 rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-400">Tu nombre</p>
-              <p className="text-xl font-semibold text-white">{player.name}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Estado</p>
-              <p className={`text-lg font-bold ${player.is_alive ? 'text-green-400' : 'text-red-400'}`}>
-                {player.is_alive ? '✅ Vivo' : '☠️ Eliminado'}
+        {/* Pantalla de GANADOR (para todos los jugadores) */}
+        {isFinished && winner && (
+          <div className="mb-6">
+            <div className={`rounded-xl p-8 backdrop-blur-sm border-2 text-center ${
+              isWinner 
+                ? 'bg-gradient-to-br from-yellow-600/50 to-yellow-700/50 border-yellow-400/50'
+                : 'bg-gradient-to-br from-purple-900/50 to-purple-950/50 border-purple-400/50'
+            }`}>
+              <p className="text-6xl mb-4">{isWinner ? '🏆' : '👑'}</p>
+              <p className={`text-3xl font-bold mb-2 ${
+                isWinner ? 'text-yellow-100' : 'text-purple-100'
+              }`}>
+                {isWinner ? '¡ERES EL GANADOR!' : `¡${winner.name} GANÓ!`}
               </p>
-            </div>
-          </div>
-          
-          {player.kill_count > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <p className="text-sm text-gray-400">Asesinatos exitosos</p>
-              <p className="text-2xl font-bold text-red-400">� {player.kill_count}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Assignment card - solo si está vivo */}
-        {player.is_alive ? (
-          game.status === 'finished' ? (
-            <div className="rounded-xl bg-gradient-to-br from-yellow-600/50 to-yellow-700/50 p-8 backdrop-blur-sm border-2 border-yellow-400/50 text-center">
-              <p className="text-6xl mb-4">🏆</p>
-              <p className="text-3xl font-bold text-yellow-100 mb-2">¡GANADOR!</p>
-              <p className="text-xl text-yellow-200">Has ganado RucaKiller</p>
+              <p className={`text-xl mb-4 ${
+                isWinner ? 'text-yellow-200' : 'text-purple-200'
+              }`}>
+                {isWinner ? 'Has ganado RucaKiller' : 'El último asesino en pie'}
+              </p>
               <div className="mt-6 rounded-lg bg-black/40 p-4">
-                <p className="text-sm text-yellow-100/80">Total de asesinatos</p>
-                <p className="text-4xl font-bold text-yellow-300">{player.kill_count}</p>
+                <p className={`text-sm ${
+                  isWinner ? 'text-yellow-100/80' : 'text-purple-100/80'
+                }`}>
+                  Total de asesinatos
+                </p>
+                <p className={`text-4xl font-bold ${
+                  isWinner ? 'text-yellow-300' : 'text-purple-300'
+                }`}>
+                  🔪 {winner.kill_count}
+                </p>
               </div>
+
+              {/* Botón para volver al menú */}
+              <button
+                onClick={handleBackToMenu}
+                className={`mt-6 w-full rounded-lg px-6 py-3 font-semibold transition-all hover:scale-105 ${
+                  isWinner
+                    ? 'bg-yellow-500 text-yellow-950 hover:bg-yellow-400'
+                    : 'bg-purple-600 text-white hover:bg-purple-500'
+                }`}
+              >
+                🏠 Volver al Menú Principal
+              </button>
             </div>
-          ) : (
-            <AssignmentCard gameId={gameId} playerId={player.id} />
-          )
-        ) : (
-          <div className="rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 backdrop-blur-sm border-2 border-gray-500/50 text-center">
-            <p className="text-4xl mb-4">☠️</p>
-            <p className="text-2xl font-bold text-gray-300 mb-2">Has sido eliminado</p>
-            <p className="text-gray-400">Ya no tienes objetivos activos</p>
           </div>
         )}
 
-        {/* Special character badge (si tiene) */}
-        {player.special_character && (
-          <div className="mt-6 rounded-xl bg-purple-900/30 p-5 backdrop-blur-sm border border-purple-500/30">
-            <p className="text-sm text-purple-300 mb-1">🎭 Personaje especial</p>
-            <p className="text-xl font-bold text-purple-100 capitalize">
-              {player.special_character}
-            </p>
-            {player.special_character_used && (
-              <span className="mt-2 inline-block text-xs text-purple-300/70">
-                ✓ Ya usado
-              </span>
+        {/* Contenido normal si el juego NO ha terminado */}
+        {!isFinished && (
+          <>
+            {/* Paused banner */}
+            {isPaused && (
+              <div className="mb-6 rounded-xl bg-yellow-600/20 p-4 backdrop-blur-sm border-2 border-yellow-500/50 animate-pulse">
+                <p className="text-center text-lg font-semibold text-yellow-200">
+                  ⏸️ Juego en pausa
+                </p>
+                <p className="text-center text-sm text-yellow-100/70 mt-1">
+                  El GameMaster ha pausado temporalmente el juego
+                </p>
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Power badge (si tiene) */}
-        {player.power_2kills && (
-          <div className="mt-4 rounded-xl bg-orange-900/30 p-5 backdrop-blur-sm border border-orange-500/30">
-            <p className="text-sm text-orange-300 mb-1">⚡ Poder especial</p>
-            <p className="text-xl font-bold text-orange-100 capitalize">
-              {player.power_2kills.replace('_', ' ')}
-            </p>
-            {player.power_2kills_used && (
-              <span className="mt-2 inline-block text-xs text-orange-300/70">
-                ✓ Ya usado
-              </span>
+            {/* Player status */}
+            <div className="mb-6 rounded-xl bg-black/30 p-5 backdrop-blur-sm border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Tu nombre</p>
+                  <p className="text-xl font-semibold text-white">{player.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400">Estado</p>
+                  <p className={`text-lg font-bold ${player.is_alive ? 'text-green-400' : 'text-red-400'}`}>
+                    {player.is_alive ? '✅ Vivo' : '☠️ Eliminado'}
+                  </p>
+                </div>
+              </div>
+              
+              {player.kill_count > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-sm text-gray-400">Asesinatos exitosos</p>
+                  <p className="text-2xl font-bold text-red-400">🔪 {player.kill_count}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Assignment card - solo si está vivo */}
+            {player.is_alive ? (
+              <AssignmentCard gameId={gameId} playerId={player.id} />
+            ) : (
+              <div className="rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 backdrop-blur-sm border-2 border-gray-500/50 text-center">
+                <p className="text-4xl mb-4">☠️</p>
+                <p className="text-2xl font-bold text-gray-300 mb-2">Has sido eliminado</p>
+                <p className="text-gray-400">Ya no tienes objetivos activos</p>
+              </div>
             )}
-          </div>
+
+            {/* Special character badge (si tiene) */}
+            {player.special_character && (
+              <div className="mt-6 rounded-xl bg-purple-900/30 p-5 backdrop-blur-sm border border-purple-500/30">
+                <p className="text-sm text-purple-300 mb-1">🎭 Personaje especial</p>
+                <p className="text-xl font-bold text-purple-100 capitalize">
+                  {player.special_character}
+                </p>
+                {player.special_character_used && (
+                  <span className="mt-2 inline-block text-xs text-purple-300/70">
+                    ✓ Ya usado
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Power badge (si tiene) */}
+            {player.power_2kills && (
+              <div className="mt-4 rounded-xl bg-orange-900/30 p-5 backdrop-blur-sm border border-orange-500/30">
+                <p className="text-sm text-orange-300 mb-1">⚡ Poder especial</p>
+                <p className="text-xl font-bold text-orange-100 capitalize">
+                  {player.power_2kills.replace('_', ' ')}
+                </p>
+                {player.power_2kills_used && (
+                  <span className="mt-2 inline-block text-xs text-orange-300/70">
+                    ✓ Ya usado
+                  </span>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
