@@ -165,6 +165,31 @@ export default function GameLobby() {
     }
   };
 
+  const handleRemovePlayer = async (playerId: string, playerName: string) => {
+    if (!isGameMaster) return;
+
+    const confirmRemove = window.confirm(
+      `¿Estás seguro de que quieres eliminar a ${playerName} del lobby?`
+    );
+
+    if (!confirmRemove) return;
+
+    try {
+      const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('id', playerId);
+
+      if (error) {
+        console.error('Error removing player:', error);
+        alert('Error al eliminar el jugador');
+      }
+    } catch (error) {
+      console.error('Error removing player:', error);
+      alert('Error al eliminar el jugador');
+    }
+  };
+
   return (
     <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
       <div className="h-full overflow-y-auto">
@@ -198,7 +223,7 @@ export default function GameLobby() {
                   key={player.id}
                   className="flex items-center justify-between rounded-lg bg-black/40 p-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <span className="text-2xl">{index + 1}</span>
                     <div>
                       <p className="font-semibold text-white">{player.name}</p>
@@ -207,7 +232,18 @@ export default function GameLobby() {
                       )}
                     </div>
                   </div>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                    {isGameMaster && !player.is_game_master && (
+                      <button
+                        onClick={() => handleRemovePlayer(player.id, player.name)}
+                        className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors"
+                        title="Eliminar jugador"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

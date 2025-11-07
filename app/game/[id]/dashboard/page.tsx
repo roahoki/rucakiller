@@ -226,7 +226,10 @@ export default function GameMasterDashboard() {
 
     const { error } = await supabase
       .from('games')
-      .update({ status: 'completed' })
+      .update({ 
+        status: 'finished',
+        end_time: new Date().toISOString()
+      })
       .eq('id', gameId);
 
     if (error) {
@@ -234,17 +237,58 @@ export default function GameMasterDashboard() {
       alert('Error al terminar la partida');
       setEnding(false);
     } else {
+      // Desactivar todas las asignaciones
+      await supabase
+        .from('assignments')
+        .update({ is_active: false })
+        .eq('game_id', gameId);
+
       // Crear notificación pública
       await supabase.from('notifications').insert({
         game_id: gameId,
         player_id: null,
         type: 'public',
-        message: '🏁 El juego ha terminado',
+        message: '🏁 El GameMaster ha terminado la partida',
         read: false,
       });
 
       alert('Partida finalizada exitosamente');
       setEnding(false);
+    }
+  };
+
+  const handleRemovePlayer = async (playerId: string, playerName: string) => {
+    const confirmRemove = window.confirm(
+      `¿Estás seguro de que quieres eliminar a ${playerName}? Esta acción no se puede deshacer.`
+    );
+
+    if (!confirmRemove) return;
+
+    try {
+      // Eliminar jugador
+      const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('id', playerId);
+
+      if (error) {
+        console.error('Error removing player:', error);
+        alert('Error al eliminar el jugador');
+      } else {
+        // Notificar
+        await supabase.from('notifications').insert({
+          game_id: gameId,
+          player_id: null,
+          type: 'public',
+          message: `👋 ${playerName} ha sido eliminado de la partida`,
+          read: false,
+        });
+
+        alert(`${playerName} ha sido eliminado exitosamente`);
+      }
+    } catch (error) {
+      console.error('Error removing player:', error);
+      alert('Error al eliminar el jugador');
     }
   };
 
@@ -368,31 +412,42 @@ export default function GameMasterDashboard() {
                     : 'bg-gray-900/20 border border-gray-500/30'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
                   <span className="text-2xl">
                     {player.is_alive ? '✅' : '☠️'}
                   </span>
-                  <div>
+                  <div className="flex-1">
                     <p className={`font-semibold ${player.is_alive ? 'text-white' : 'text-gray-400'}`}>
                       {player.name}
                     </p>
-                    {player.special_character && (
-                      <span className="text-xs text-purple-300">
-                        🎭 {player.special_character}
-                        {player.special_character_used && ' (usado)'}
-                      </span>
-                    )}
-                    {player.power_2kills && (
-                      <span className="ml-2 text-xs text-orange-300">
-                        ⚡ {player.power_2kills.replace('_', ' ')}
-                        {player.power_2kills_used && ' (usado)'}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {player.special_character && (
+                        <span className="text-xs text-purple-300">
+                          🎭 {player.special_character}
+                          {player.special_character_used && ' (usado)'}
+                        </span>
+                      )}
+                      {player.power_2kills && (
+                        <span className="text-xs text-orange-300">
+                          ⚡ {player.power_2kills.replace('_', ' ')}
+                          {player.power_2kills_used && ' (usado)'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-400">Kills</p>
-                  <p className="text-xl font-bold text-red-400">{player.kill_count}</p>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm text-gray-400">Kills</p>
+                    <p className="text-xl font-bold text-red-400">{player.kill_count}</p>
+                  </div>
+                  <button
+                    onClick={() => handleRemovePlayer(player.id, player.name)}
+                    className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+                    title="Eliminar jugador"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}

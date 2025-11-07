@@ -326,6 +326,40 @@ export default function GamePage() {
           </div>
         )}
 
+        {/* Pantalla cuando GM termina el juego manualmente (sin ganador) */}
+        {isFinished && !winner && (
+          <div className="mb-6">
+            <div className="rounded-xl p-8 backdrop-blur-sm border-2 text-center bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-500/50">
+              <p className="text-6xl mb-4">🏁</p>
+              <p className="text-3xl font-bold mb-2 text-gray-100">
+                Partida Finalizada
+              </p>
+              <p className="text-xl mb-4 text-gray-300">
+                El GameMaster ha terminado la partida
+              </p>
+              
+              {player && player.kill_count > 0 && (
+                <div className="mt-6 rounded-lg bg-black/40 p-4">
+                  <p className="text-sm text-gray-400">
+                    Tus asesinatos
+                  </p>
+                  <p className="text-4xl font-bold text-red-400">
+                    🔪 {player.kill_count}
+                  </p>
+                </div>
+              )}
+
+              {/* Botón para volver al menú */}
+              <button
+                onClick={handleBackToMenu}
+                className="mt-6 w-full rounded-lg px-6 py-3 font-semibold transition-all hover:scale-105 bg-gray-600 text-white hover:bg-gray-500"
+              >
+                🏠 Volver al Menú Principal
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Contenido normal si el juego NO ha terminado */}
         {!isFinished && (
           <>
