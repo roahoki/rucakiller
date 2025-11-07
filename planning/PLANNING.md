@@ -1,8 +1,8 @@
 # 🏗️ Plan de Desarrollo - RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Estado:** 🎉 **MVP CORE COMPLETADO + FIXES CRÍTICOS**  
-**Progreso:** 13 tareas completadas + 4 bugs corregidos - FASE 1 100% ✅
+**Estado:** 🎉 **MVP CORE COMPLETADO + TASK-111 (NotificationCenter)**  
+**Progreso:** 14 tareas completadas - FASE 1 100% ✅ + FASE 2 iniciada
 
 ---
 
@@ -18,15 +18,20 @@
 7. **Configuración del Juego:** 5 lugares + 18 armas (valores de GAME-CORE.md)
 8. **Algoritmo Circular:** Genera asignaciones hunter → target perfectas
 9. **Inicio del Juego:** Cambio de estado + redirección automática
+10. **Sistema de Asesinatos:** Intento, confirmación, herencia de objetivos
+11. **Dashboard GameMaster:** Monitoreo completo en tiempo real
+12. **Sistema de Victoria:** Detección de ganador y pantalla final
+13. **Kill Count:** Contador atómico con Realtime
+14. **NotificationCenter:** Badge, dropdown, sonido, vibración ⭐ NUEVO
 
-### 🚧 En Progreso:
-- **TASK-106:** Vista del jugador - Ver su objetivo (próximo)
+### 🚧 En Progreso (FASE 2):
+- **TASK-200:** Personajes Especiales (próximo)
 
 ### 📋 Próximas Prioridades:
-1. Mostrar objetivo, lugar y arma al jugador
-2. Validar asesinatos (botón "He asesinado")
-3. Herencia de objetivos al asesinar
-4. Dashboard del GameMaster (monitoreo en tiempo real)
+1. Asignar personajes especiales (Espía, Detective, Saboteador)
+2. Implementar poderes de personajes especiales
+3. Sistema de poderes por 2 kills
+4. Historial de asesinatos mejorado
 
 ---
 

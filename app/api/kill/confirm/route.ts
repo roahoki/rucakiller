@@ -247,31 +247,6 @@ export async function POST(request: Request) {
         })
         .eq('id', event.game_id);
 
-      // Obtener nombre del ganador
-      const { data: winner } = await supabase
-        .from('players')
-        .select('name')
-        .eq('id', event.killer_id)
-        .single();
-
-      // Notificar al ganador
-      await supabase.from('notifications').insert({
-        game_id: event.game_id,
-        player_id: event.killer_id,
-        type: 'private',
-        message: `🏆 ¡FELICITACIONES! Eres el ganador de RucaKiller`,
-        read: false,
-      });
-
-      // Notificación pública del ganador
-      await supabase.from('notifications').insert({
-        game_id: event.game_id,
-        player_id: null,
-        type: 'public',
-        message: `🏆 ¡${winner?.name || 'Un jugador'} ha ganado el juego!`,
-        read: false,
-      });
-
       return NextResponse.json({
         success: true,
         message: 'Asesinato confirmado. ¡Hay un ganador!',

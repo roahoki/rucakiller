@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import type { Game, Player } from '@/lib/types';
 import AssignmentCard from '@/components/AssignmentCard';
 import KillConfirmationModal from '@/components/KillConfirmationModal';
+import NotificationCenter from '@/components/NotificationCenter';
 
 export default function GamePage() {
   const params = useParams();
@@ -198,7 +199,12 @@ export default function GamePage() {
       
       <div className="mx-auto max-w-2xl pb-8">
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center relative">
+          {/* Notification Center - posición absoluta arriba a la derecha */}
+          <div className="absolute top-0 right-0">
+            <NotificationCenter gameId={gameId} playerId={player.id} />
+          </div>
+          
           <h1 className="mb-4 text-4xl font-bold text-white">
             🎯 RucaKiller
           </h1>

@@ -1,7 +1,8 @@
 # 📋 Backlog de Tareas - RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Estado del Proyecto:** 🎉 MVP CORE COMPLETADO + FIXES APLICADOS
+**Estado del Proyecto:** 🎉 MVP CORE COMPLETADO + TASK-111 COMPLETADA
+
 
 ---
 
@@ -111,7 +112,7 @@
 ### ✅ TASK-109: Dashboard del GameMaster - Vista General
 **Estado:** COMPLETADA
 **Fecha:** 7 de noviembre, 2025
-- Página /game/[id]/dashboard completa
+- Componente GameMasterDashboard completo
 - Grid de estadísticas (vivos, muertos, kills totales, estado)
 - Control pausar/reanudar juego
 - Lista de jugadores con estado y kill_count
@@ -119,6 +120,21 @@
 - Historial de asesinatos confirmados
 - Suscripciones Realtime para actualización automática
 - Verificación de autenticación GameMaster
+
+### ✅ TASK-111: Sistema de Notificaciones Completo
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- Componente NotificationCenter con diseño moderno
+- Badge con contador de notificaciones no leídas
+- Dropdown con lista de notificaciones públicas y privadas
+- Marcar automáticamente como leídas al abrir
+- Suscripción Realtime para nuevas notificaciones
+- Sonido de notificación (Web Audio API)
+- Vibración en dispositivos móviles
+- Filtrado correcto (públicas + privadas del jugador)
+- Integrado en vista del jugador y dashboard GM
+- Formato de tiempo relativo (Hace Xm, Hace Xh)
+- Límite de 20 notificaciones más recientes
 
 ---
 

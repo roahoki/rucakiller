@@ -237,16 +237,16 @@ export default function GameMasterDashboard() {
   const totalKills = players.reduce((sum, p) => sum + p.kill_count, 0);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-purple-900 via-purple-950 to-black p-4">
       <div className="mx-auto max-w-6xl pb-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="mb-2 text-4xl font-bold text-white">
+          <h1 className="mb-4 text-4xl font-bold text-white">
             👑 Dashboard GameMaster
           </h1>
           <div className="inline-block rounded-lg bg-black/50 px-6 py-3 backdrop-blur-sm">
-            <p className="text-sm text-red-200">Código de partida</p>
-            <p className="text-3xl font-bold tracking-wider text-white">{game.code}</p>
+            <p className="text-sm text-purple-200">Código de partida</p>
+            <p className="text-2xl font-bold tracking-wider text-white">{game.code}</p>
           </div>
         </div>
 

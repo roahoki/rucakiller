@@ -1,8 +1,8 @@
 # 📈 Estado del Proyecto RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Versión:** MVP Core (v0.1)  
-**Progreso General:** 🎉 MVP CORE 100% COMPLETADO + FIXES CRÍTICOS
+**Versión:** MVP Core + FASE 2 Inicio (v0.2)  
+**Progreso General:** 🎉 MVP CORE 100% + TASK-111 COMPLETADA
 
 ---
 
@@ -77,6 +77,18 @@ fix(task-106,task-108): arreglar kill_count, auto-refresh víctima, pantalla gan
 - Suscripción Realtime a `players` para auto-refresh ✅
 - Pantalla de ganador visible para TODOS los jugadores ✅
 - Botón "Volver al Menú Principal" con limpieza de localStorage ✅
+
+### Commit 14: Sistema de Notificaciones Completo ⭐ NUEVO
+```
+feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
+```
+**Cambios:**
+- Componente NotificationCenter con badge y dropdown ✅
+- Suscripción Realtime a tabla notifications ✅
+- Sonido de notificación (Web Audio API) ✅
+- Vibración en dispositivos móviles ✅
+- Marcar como leídas automáticamente ✅
+- Integrado en vista jugador y dashboard GM ✅
 
 ---
 
@@ -167,12 +179,26 @@ fix(task-106,task-108): arreglar kill_count, auto-refresh víctima, pantalla gan
 - ✅ **Botón "Volver al Menú Principal" para limpiar y reiniciar**
 - ✅ Notificaciones de victoria (privada + pública)
 
-### 10. Sistema de Kill Count
+### 11. Sistema de Kill Count
 - ✅ Campo `kill_count` en tabla players (INTEGER, default: 0)
 - ✅ **Función SQL `increment_kill_count()` para incremento atómico**
 - ✅ **Actualización en tiempo real con Realtime**
 - ✅ **Mostrado en Player Status Card**
 - ✅ **Sincronización automática al confirmar asesinatos**
+
+### 12. Sistema de Notificaciones Completo ⭐ NUEVO
+- ✅ **Componente NotificationCenter con badge contador**
+- ✅ **Dropdown con notificaciones públicas y privadas**
+- ✅ **Filtrado correcto (tabla notifications)**
+- ✅ **Marcar como leídas automáticamente**
+- ✅ **Suscripción Realtime para nuevas notificaciones**
+- ✅ **Sonido de notificación (Web Audio API)**
+- ✅ **Vibración en dispositivos móviles**
+- ✅ **Formato de tiempo relativo (Hace Xm, Hace Xh)**
+- ✅ **Límite de 20 notificaciones más recientes**
+- ✅ **Integrado en vista jugador y dashboard GM**
+
+---
 
 ### 11. Auto-Refresh y Realtime
 - ✅ **Suscripción a tabla `players` para detectar cambios**
@@ -213,6 +239,15 @@ fix(task-106,task-108): arreglar kill_count, auto-refresh víctima, pantalla gan
 ---
 
 ## 🚧 Próximas Tareas Prioritarias
+
+### FASE 2 - Features Principales (En Progreso):
+
+**Próximas tareas:**
+1. **TASK-200:** Asignar Personajes Especiales (Espía, Detective, Saboteador)
+2. **TASK-201-203:** Implementar poderes de personajes especiales
+3. **TASK-204-207:** Sistema de poderes por 2 kills (Asesino Serial, Investigador, Sicario)
+4. **TASK-208:** Historial de asesinatos mejorado
+5. **TASK-209:** Eliminar jugador manualmente (GameMaster)
 
 ---
 

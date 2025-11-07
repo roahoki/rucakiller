@@ -126,26 +126,11 @@ export async function POST(request: Request) {
       .single();
 
     if (eventError) {
-      console.error('Error creating event:', eventError);
+      console.error('Error creating kill event:', eventError);
       return NextResponse.json(
         { error: 'Error al crear el evento de asesinato' },
         { status: 500 }
       );
-    }
-
-    // Crear notificación para la víctima
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        game_id: gameId,
-        player_id: targetId,
-        type: 'private',
-        message: `${hunter.name} dice que te ha asesinado. ¿Confirmas?`,
-        read: false,
-      });
-
-    if (notificationError) {
-      console.error('Error creating notification:', notificationError);
     }
 
     return NextResponse.json({
