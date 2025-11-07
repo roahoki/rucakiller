@@ -69,6 +69,25 @@ export async function POST(request: Request) {
     }
 
     // CONFIRMAR EL ASESINATO
+
+    // Verificar si la víctima tiene cazador con poder asesino_serial (CONTRA)
+    const { data: victimHunter } = await supabase
+      .from('assignments')
+      .select('hunter_id')
+      .eq('target_id', victimId)
+      .eq('is_active', true)
+      .single();
+
+    let hunterHasAsesinoSerial = false;
+    if (victimHunter) {
+      const { data: hunterPower } = await supabase
+        .from('players')
+        .select('power_2kills')
+        .eq('id', victimHunter.hunter_id)
+        .single();
+      
+      hunterHasAsesinoSerial = hunterPower?.power_2kills === 'asesino_serial';
+    }
     
     // 1. Marcar el evento como confirmado
     const { error: confirmError } = await supabase

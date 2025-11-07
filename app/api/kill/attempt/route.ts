@@ -93,6 +93,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verificar si el hunter tiene el poder "asesino_serial"
+    const { data: hunterPower } = await supabase
+      .from('players')
+      .select('power_2kills')
+      .eq('id', hunterId)
+      .single();
+
+    const hasAsesinoSerial = hunterPower?.power_2kills === 'asesino_serial';
+
     // Verificar si ya hay un intento pendiente
     const { data: existingEvent } = await supabase
       .from('events')

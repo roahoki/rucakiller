@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Assignment, Player } from '@/lib/types';
+import KillAttemptModal from './KillAttemptModal';
 
 interface AssignmentCardProps {
   gameId: string;
@@ -15,6 +16,8 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
   const [loading, setLoading] = useState(true);
   const [attempting, setAttempting] = useState(false);
   const [pendingKill, setPendingKill] = useState(false);
+  const [hasAsesinoSerial, setHasAsesinoSerial] = useState(false);
+  const [showKillModal, setShowKillModal] = useState(false);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -48,6 +51,17 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
         } else {
           setTarget(targetData);
         }
+      }
+
+      // Verificar si el jugador tiene poder asesino_serial
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('power_2kills')
+        .eq('id', playerId)
+        .single();
+
+      if (playerData?.power_2kills === 'asesino_serial') {
+        setHasAsesinoSerial(true);
       }
 
       // Verificar si hay un intento de asesinato pendiente
@@ -131,10 +145,11 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
     };
   }, [gameId, playerId]);
 
-  const handleKillAttempt = async () => {
+  const handleKillAttempt = async (location: string, weapon: string) => {
     if (!assignment || !target) return;
 
     setAttempting(true);
+    setShowKillModal(false);
 
     try {
       const response = await fetch('/api/kill/attempt', {
@@ -222,6 +237,13 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
         <p className="text-2xl font-bold text-white">
           {assignment.location}
         </p>
+        {hasAsesinoSerial && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-purple-400 text-sm font-semibold">
+              ⚡ Poder Asesino Serial: No necesitas estar aquí
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Weapon */}
@@ -237,8 +259,13 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
       {/* Instructions */}
       <div className="mt-6 rounded-lg bg-red-950/50 p-4 backdrop-blur-sm border border-red-500/30">
         <p className="text-sm text-red-100/90 leading-relaxed">
-          💡 <strong>Cómo asesinar:</strong> Debes estar en <strong>{assignment.location}</strong> con el arma <strong>{assignment.weapon}</strong> y decirle a tu objetivo: <em>"Te maté"</em>
+          💡 <strong>Cómo asesinar:</strong> Debes {hasAsesinoSerial ? '' : `estar en <strong>${assignment.location}</strong> con `}el arma <strong>{assignment.weapon}</strong> y decirle a tu objetivo: <em>"Te maté"</em>
         </p>
+        {hasAsesinoSerial && (
+          <p className="text-xs text-purple-300 mt-2">
+            ⚡ Con tu poder, puedes asesinar en cualquier lugar
+          </p>
+        )}
       </div>
 
       {/* Kill button */}
@@ -252,7 +279,7 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
             </div>
           ) : (
             <button
-              onClick={handleKillAttempt}
+              onClick={() => setShowKillModal(true)}
               disabled={attempting}
               className="w-full rounded-xl bg-gradient-to-r from-red-600 to-red-700 p-4 font-bold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -270,6 +297,17 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
           )}
         </div>
       )}
+
+      {/* Kill Attempt Modal */}
+      <KillAttemptModal
+        isOpen={showKillModal}
+        onClose={() => setShowKillModal(false)}
+        onConfirm={handleKillAttempt}
+        targetName={target?.name || ''}
+        requiredLocation={assignment?.location || ''}
+        requiredWeapon={assignment?.weapon || ''}
+        hasAsesinoSerial={hasAsesinoSerial}
+      />
     </div>
   );
 }
