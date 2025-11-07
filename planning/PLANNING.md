@@ -1,8 +1,8 @@
 # 🏗️ Plan de Desarrollo - RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Estado:** 🎉 **MVP CORE COMPLETADO + TASK-111 (NotificationCenter)**  
-**Progreso:** 14 tareas completadas - FASE 1 100% ✅ + FASE 2 iniciada
+**Estado:** 🎉 **MVP CORE COMPLETADO + TASK-111 Y TASK-200**  
+**Progreso:** 15 tareas completadas - FASE 1 100% ✅ + FASE 2 en progreso (2/10)
 
 ---
 
@@ -22,16 +22,17 @@
 11. **Dashboard GameMaster:** Monitoreo completo en tiempo real
 12. **Sistema de Victoria:** Detección de ganador y pantalla final
 13. **Kill Count:** Contador atómico con Realtime
-14. **NotificationCenter:** Badge, dropdown, sonido, vibración ⭐ NUEVO
+14. **NotificationCenter:** Badge, dropdown, vibración ⭐
+15. **Personajes Especiales:** Espía, Detective, Saboteador asignados aleatoriamente ⭐ NUEVO
 
 ### 🚧 En Progreso (FASE 2):
-- **TASK-200:** Personajes Especiales (próximo)
+- **TASK-201-203:** Poderes de personajes especiales (próximo)
 
 ### 📋 Próximas Prioridades:
-1. Asignar personajes especiales (Espía, Detective, Saboteador)
-2. Implementar poderes de personajes especiales
-3. Sistema de poderes por 2 kills
-4. Historial de asesinatos mejorado
+1. Implementar poder Espía (ver objetivo de otro)
+2. Implementar poder Detective (recibir pista)
+3. Implementar poder Saboteador (cambiar condiciones)
+4. Sistema de poderes por 2 kills
 
 ---
 

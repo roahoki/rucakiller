@@ -1,8 +1,8 @@
 # 📈 Estado del Proyecto RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Versión:** MVP Core + FASE 2 Inicio (v0.2)  
-**Progreso General:** 🎉 MVP CORE 100% + TASK-111 COMPLETADA
+**Versión:** FASE 2 en progreso (v0.2)  
+**Progreso General:** 🎉 MVP CORE 100% + TASK-111 Y TASK-200 COMPLETADAS
 
 ---
 
@@ -89,6 +89,17 @@ feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
 - Vibración en dispositivos móviles ✅
 - Marcar como leídas automáticamente ✅
 - Integrado en vista jugador y dashboard GM ✅
+
+### Commit 15: Asignación de Personajes Especiales ⭐ NUEVO
+```
+feat(task-200): implementar asignación aleatoria de personajes especiales
+```
+**Cambios:**
+- Función assignSpecialCharacters() en /lib/game-utils.ts ✅
+- Asignación automática al iniciar juego (~30% jugadores) ✅
+- Personajes: Espía, Detective, Saboteador ✅
+- Badge en vista del jugador ✅
+- Badge en dashboard GameMaster ✅
 
 ---
 
@@ -186,7 +197,7 @@ feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
 - ✅ **Mostrado en Player Status Card**
 - ✅ **Sincronización automática al confirmar asesinatos**
 
-### 12. Sistema de Notificaciones Completo ⭐ NUEVO
+### 12. Sistema de Notificaciones Completo ⭐
 - ✅ **Componente NotificationCenter con badge contador**
 - ✅ **Dropdown con notificaciones públicas y privadas**
 - ✅ **Filtrado correcto (tabla notifications)**
@@ -197,6 +208,16 @@ feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
 - ✅ **Formato de tiempo relativo (Hace Xm, Hace Xh)**
 - ✅ **Límite de 20 notificaciones más recientes**
 - ✅ **Integrado en vista jugador y dashboard GM**
+
+### 13. Personajes Especiales (Espía, Detective, Saboteador) ⭐ NUEVO
+- ✅ **Función assignSpecialCharacters() en /lib/game-utils.ts**
+- ✅ **Selección aleatoria de ~30% de jugadores**
+- ✅ **Asignación balanceada entre 3 personajes**
+- ✅ **Integración en API /api/game/start**
+- ✅ **Badge visible en vista del jugador**
+- ✅ **Badge visible en dashboard GameMaster**
+- ✅ **Indicador de poder usado/no usado**
+- ✅ **Campo special_character en tabla players**
 
 ---
 
@@ -243,8 +264,8 @@ feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
 ### FASE 2 - Features Principales (En Progreso):
 
 **Próximas tareas:**
-1. **TASK-200:** Asignar Personajes Especiales (Espía, Detective, Saboteador)
-2. **TASK-201-203:** Implementar poderes de personajes especiales
+1. ✅ **TASK-200:** Asignar Personajes Especiales (COMPLETADA)
+2. **TASK-201-203:** Implementar poderes de personajes especiales (EN PROGRESO)
 3. **TASK-204-207:** Sistema de poderes por 2 kills (Asesino Serial, Investigador, Sicario)
 4. **TASK-208:** Historial de asesinatos mejorado
 5. **TASK-209:** Eliminar jugador manualmente (GameMaster)

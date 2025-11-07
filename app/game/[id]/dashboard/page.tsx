@@ -317,6 +317,13 @@ export default function GameMasterDashboard() {
                     {player.special_character && (
                       <span className="text-xs text-purple-300">
                         🎭 {player.special_character}
+                        {player.special_character_used && ' (usado)'}
+                      </span>
+                    )}
+                    {player.power_2kills && (
+                      <span className="ml-2 text-xs text-orange-300">
+                        ⚡ {player.power_2kills.replace('_', ' ')}
+                        {player.power_2kills_used && ' (usado)'}
                       </span>
                     )}
                   </div>

@@ -136,6 +136,18 @@
 - Formato de tiempo relativo (Hace Xm, Hace Xh)
 - Límite de 20 notificaciones más recientes
 
+### ✅ TASK-200: Asignar Personajes Especiales
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- Función assignSpecialCharacters() en /lib/game-utils.ts
+- Selecciona ~30% de jugadores aleatoriamente
+- Asigna: 'espia', 'detective', 'saboteador' de forma balanceada
+- Integrado en /api/game/start (se ejecuta al iniciar juego)
+- Badge visible en vista del jugador
+- Badge visible en dashboard GameMaster
+- Indicador si el poder ya fue usado
+- Log en consola de asignaciones
+
 ---
 
 ## 🎯 FASE 1: MVP Core - Sistema Base del Juego

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { generateCircularAssignments, validateCircularChain } from '@/lib/assignment-algorithm';
+import { assignSpecialCharacters } from '@/lib/game-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -127,6 +128,20 @@ export async function POST(request: NextRequest) {
       .update({ is_available: false })
       .eq('game_id', gameId)
       .in('name', usedWeaponNames);
+
+    // Asignar personajes especiales a ~30% de los jugadores
+    const killerIds = killers.map(k => k.id);
+    const specialCharacterAssignments = assignSpecialCharacters(killerIds);
+
+    // Actualizar jugadores con personajes especiales
+    for (const assignment of specialCharacterAssignments) {
+      await supabase
+        .from('players')
+        .update({ special_character: assignment.character })
+        .eq('id', assignment.playerId);
+    }
+
+    console.log(`Personajes especiales asignados: ${specialCharacterAssignments.length}/${killers.length} jugadores`);
 
     // Cambiar estado del juego a "active"
     const { error: updateError } = await supabase
