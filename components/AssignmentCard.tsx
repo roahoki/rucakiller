@@ -16,6 +16,7 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
   const [attempting, setAttempting] = useState(false);
   const [pendingKill, setPendingKill] = useState(false);
   const [hasAsesinoSerial, setHasAsesinoSerial] = useState(false);
+  const [targetHasAsesinoSerial, setTargetHasAsesinoSerial] = useState(false);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -48,6 +49,11 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
           console.error('Error fetching target:', targetError);
         } else {
           setTarget(targetData);
+          
+          // Verificar si el objetivo tiene poder asesino_serial (CONTRA)
+          if (targetData.power_2kills === 'asesino_serial') {
+            setTargetHasAsesinoSerial(true);
+          }
         }
       }
 
@@ -110,6 +116,13 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
 
               if (newTarget) {
                 setTarget(newTarget);
+                
+                // Verificar si el nuevo objetivo tiene poder asesino_serial (CONTRA)
+                if (newTarget.power_2kills === 'asesino_serial') {
+                  setTargetHasAsesinoSerial(true);
+                } else {
+                  setTargetHasAsesinoSerial(false);
+                }
               }
             }
           }
@@ -137,9 +150,37 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
       )
       .subscribe();
 
+    // Suscripción a cambios en el jugador objetivo (para detectar cuando obtiene poder)
+    const targetChannel = assignment?.target_id ? supabase
+      .channel(`target:${assignment.target_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'players',
+          filter: `id=eq.${assignment.target_id}`,
+        },
+        (payload) => {
+          const updatedTarget = payload.new as Player;
+          setTarget(updatedTarget);
+          
+          // Actualizar si el objetivo obtiene Asesino Serial
+          if (updatedTarget.power_2kills === 'asesino_serial') {
+            setTargetHasAsesinoSerial(true);
+          } else {
+            setTargetHasAsesinoSerial(false);
+          }
+        }
+      )
+      .subscribe() : null;
+
     return () => {
       supabase.removeChannel(assignmentChannel);
       supabase.removeChannel(eventsChannel);
+      if (targetChannel) {
+        supabase.removeChannel(targetChannel);
+      }
     };
   }, [gameId, playerId]);
 
@@ -224,6 +265,16 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
             ☠️ Eliminado
           </span>
         )}
+        {targetHasAsesinoSerial && (
+          <div className="mt-3 bg-orange-900/40 border border-orange-500/50 rounded-lg p-3">
+            <p className="text-orange-300 text-sm font-bold flex items-center gap-2">
+              ⚡ Tu objetivo tiene Asesino Serial
+            </p>
+            <p className="text-orange-200 text-xs mt-1">
+              CONTRA: Puedes asesinarlo en cualquier lugar (solo necesitas el arma correcta)
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Location */}
@@ -261,6 +312,11 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
         {hasAsesinoSerial && (
           <p className="text-xs text-purple-300 mt-2">
             ⚡ Con tu poder Asesino Serial, no necesitas estar en {assignment.location}
+          </p>
+        )}
+        {targetHasAsesinoSerial && (
+          <p className="text-xs text-orange-300 mt-2">
+            ⚡ Como tu objetivo tiene Asesino Serial, tú tampoco necesitas estar en {assignment.location} (solo el arma correcta)
           </p>
         )}
       </div>
