@@ -8,6 +8,7 @@ import AssignmentCard from '@/components/AssignmentCard';
 import KillConfirmationModal from '@/components/KillConfirmationModal';
 import NotificationCenter from '@/components/NotificationCenter';
 import SpecialPowerModal from '@/components/SpecialPowerModal';
+import PowerSelectionModal from '@/components/PowerSelectionModal';
 
 export default function GamePage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function GamePage() {
   const [winner, setWinner] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPowerModal, setShowPowerModal] = useState(false);
+  const [showPowerSelectionModal, setShowPowerSelectionModal] = useState(false);
   
   // Guardar props del modal para evitar que se recree cuando player cambia
   const [powerModalProps, setPowerModalProps] = useState<{
@@ -167,6 +169,14 @@ export default function GamePage() {
     };
   }, [gameId, router]);
 
+  // Detectar cuando jugador llega a 2 kills y puede elegir poder
+  useEffect(() => {
+    if (player && player.kill_count >= 2 && !player.power_2kills && player.is_alive) {
+      // Mostrar modal de selección de poder
+      setShowPowerSelectionModal(true);
+    }
+  }, [player]);
+
   if (loading) {
     return (
       <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
@@ -213,6 +223,27 @@ export default function GamePage() {
           playerId={powerModalProps.playerId}
           playerCharacter={powerModalProps.playerCharacter}
           onClose={() => setShowPowerModal(false)}
+          onSuccess={() => {
+            // Recargar datos del jugador
+            supabase
+              .from('players')
+              .select('*')
+              .eq('id', player.id)
+              .single()
+              .then(({ data }) => {
+                if (data) setPlayer(data);
+              });
+          }}
+        />
+      )}
+
+      {/* Power Selection Modal (2 kills) */}
+      {showPowerSelectionModal && player && (
+        <PowerSelectionModal
+          gameId={gameId}
+          playerId={player.id}
+          playerName={player.name}
+          onClose={() => setShowPowerSelectionModal(false)}
           onSuccess={() => {
             // Recargar datos del jugador
             supabase

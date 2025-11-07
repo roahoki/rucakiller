@@ -143,6 +143,26 @@ export async function POST(request: NextRequest) {
 
     console.log(`Personajes especiales asignados: ${specialCharacterAssignments.length}/${killers.length} jugadores`);
 
+    // Crear los 3 poderes disponibles para esta partida (uno de cada tipo)
+    const powerTypes = ['asesino_serial', 'investigador', 'sicario'];
+    const powersData = powerTypes.map(powerName => ({
+      game_id: gameId,
+      power_name: powerName,
+      is_taken: false,
+      taken_by_player_id: null,
+    }));
+
+    const { error: powersError } = await supabase
+      .from('available_powers')
+      .insert(powersData);
+
+    if (powersError) {
+      console.error('Error creating available powers:', powersError);
+      // No retornamos error, solo logueamos (no es crítico)
+    } else {
+      console.log(`Poderes creados: ${powerTypes.length} poderes disponibles`);
+    }
+
     // Cambiar estado del juego a "active"
     const { error: updateError } = await supabase
       .from('games')
