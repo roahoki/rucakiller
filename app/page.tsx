@@ -36,7 +36,7 @@ export default function Home() {
           <h1 className="mb-2 text-7xl font-bold tracking-tight text-white drop-shadow-lg">
             RUCAKILLER
           </h1>
-          <p className="mb-12 text-xl text-red-200">Juego de asesinatos secretos</p>
+          <p className="mb-12 text-xl text-red-200">Juego de asesinatos secretos en rucakaru</p>
           
           {/* Main Action Buttons */}
           <div className="mb-8 space-y-4">

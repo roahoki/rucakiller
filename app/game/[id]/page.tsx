@@ -291,7 +291,7 @@ export default function GamePage() {
               <p className={`text-3xl font-bold mb-2 ${
                 isWinner ? 'text-yellow-100' : 'text-purple-100'
               }`}>
-                {isWinner ? '¡ERES EL GANADOR!' : `¡${winner.name} GANÓ!`}
+                {isWinner ? 'HAS GANADO!' : `¡${winner.name} GANÓ!`}
               </p>
               <p className={`text-xl mb-4 ${
                 isWinner ? 'text-yellow-200' : 'text-purple-200'
