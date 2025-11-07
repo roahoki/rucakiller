@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Game, Player } from '@/lib/types';
 import AssignmentCard from '@/components/AssignmentCard';
+import KillConfirmationModal from '@/components/KillConfirmationModal';
 
 export default function GamePage() {
   const params = useParams();
@@ -125,6 +126,9 @@ export default function GamePage() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-red-900 via-red-950 to-black p-4">
+      {/* Kill Confirmation Modal */}
+      <KillConfirmationModal gameId={gameId} playerId={player.id} />
+      
       <div className="mx-auto max-w-2xl pb-8">
         {/* Header */}
         <div className="mb-8 text-center">

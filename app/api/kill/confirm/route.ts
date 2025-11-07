@@ -1,0 +1,282 @@
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+export async function POST(request: Request) {
+  try {
+    const { eventId, victimId, confirmed } = await request.json();
+
+    // Validar campos requeridos
+    if (!eventId || !victimId || confirmed === undefined) {
+      return NextResponse.json(
+        { error: 'Faltan campos requeridos' },
+        { status: 400 }
+      );
+    }
+
+    // Obtener el evento
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('*, games!inner(status)')
+      .eq('id', eventId)
+      .eq('victim_id', victimId)
+      .eq('confirmed', false)
+      .single();
+
+    if (eventError || !event) {
+      return NextResponse.json(
+        { error: 'Evento no encontrado o ya confirmado' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar que el juego está activo
+    if (event.games.status !== 'active') {
+      return NextResponse.json(
+        { error: 'El juego no está activo' },
+        { status: 400 }
+      );
+    }
+
+    if (!confirmed) {
+      // RECHAZAR EL ASESINATO
+      // Marcar evento como cancelado (podríamos usar un campo 'cancelled' o simplemente eliminarlo)
+      const { error: deleteError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (deleteError) {
+        console.error('Error deleting event:', deleteError);
+        return NextResponse.json(
+          { error: 'Error al cancelar el asesinato' },
+          { status: 500 }
+        );
+      }
+
+      // Notificar al asesino que fue rechazado
+      await supabase.from('notifications').insert({
+        game_id: event.game_id,
+        player_id: event.killer_id,
+        type: 'private',
+        message: 'Tu intento de asesinato fue rechazado por la víctima.',
+        read: false,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Asesinato rechazado',
+      });
+    }
+
+    // CONFIRMAR EL ASESINATO
+    
+    // 1. Marcar el evento como confirmado
+    const { error: confirmError } = await supabase
+      .from('events')
+      .update({ confirmed: true })
+      .eq('id', eventId);
+
+    if (confirmError) {
+      console.error('Error confirming event:', confirmError);
+      return NextResponse.json(
+        { error: 'Error al confirmar el asesinato' },
+        { status: 500 }
+      );
+    }
+
+    // 2. Marcar a la víctima como muerta
+    const { error: victimError } = await supabase
+      .from('players')
+      .update({ is_alive: false })
+      .eq('id', victimId);
+
+    if (victimError) {
+      console.error('Error updating victim:', victimError);
+      return NextResponse.json(
+        { error: 'Error al actualizar la víctima' },
+        { status: 500 }
+      );
+    }
+
+    // 3. Incrementar kill_count del asesino
+    const { error: killerError } = await supabase.rpc('increment_kill_count', {
+      player_id: event.killer_id,
+    });
+
+    if (killerError) {
+      console.error('Error incrementing kill count:', killerError);
+      // No es crítico, continuar
+    }
+
+    // 4. HERENCIA DEL OBJETIVO
+    // Obtener la asignación de la víctima (su objetivo)
+    const { data: victimAssignment, error: victimAssignmentError } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('hunter_id', victimId)
+      .eq('is_active', true)
+      .single();
+
+    if (victimAssignmentError) {
+      console.error('Error fetching victim assignment:', victimAssignmentError);
+    }
+
+    // Desactivar la asignación actual del asesino
+    const { error: deactivateError } = await supabase
+      .from('assignments')
+      .update({ is_active: false })
+      .eq('hunter_id', event.killer_id)
+      .eq('is_active', true);
+
+    if (deactivateError) {
+      console.error('Error deactivating hunter assignment:', deactivateError);
+    }
+
+    // Desactivar la asignación de la víctima
+    const { error: deactivateVictimError } = await supabase
+      .from('assignments')
+      .update({ is_active: false })
+      .eq('hunter_id', victimId)
+      .eq('is_active', true);
+
+    if (deactivateVictimError) {
+      console.error('Error deactivating victim assignment:', deactivateVictimError);
+    }
+
+    // Si la víctima tenía un objetivo, heredarlo
+    if (victimAssignment) {
+      // El asesino hereda el objetivo de la víctima con nuevas condiciones
+      // Obtener un lugar aleatorio
+      const { data: locations } = await supabase
+        .from('locations')
+        .select('name')
+        .eq('game_id', event.game_id);
+
+      const randomLocation = locations && locations.length > 0
+        ? locations[Math.floor(Math.random() * locations.length)].name
+        : victimAssignment.location;
+
+      // Obtener un arma disponible
+      const { data: weapons } = await supabase
+        .from('weapons')
+        .select('*')
+        .eq('game_id', event.game_id)
+        .eq('is_available', true)
+        .limit(1);
+
+      const newWeapon = weapons && weapons.length > 0
+        ? weapons[0].name
+        : victimAssignment.weapon;
+
+      // Marcar el arma del asesino anterior como disponible
+      await supabase
+        .from('weapons')
+        .update({ is_available: true })
+        .eq('game_id', event.game_id)
+        .eq('name', event.weapon);
+
+      // Marcar la nueva arma como no disponible
+      if (weapons && weapons.length > 0) {
+        await supabase
+          .from('weapons')
+          .update({ is_available: false })
+          .eq('id', weapons[0].id);
+      }
+
+      // Crear nueva asignación para el asesino
+      const { data: newAssignment, error: newAssignmentError } = await supabase
+        .from('assignments')
+        .insert({
+          game_id: event.game_id,
+          hunter_id: event.killer_id,
+          target_id: victimAssignment.target_id,
+          location: randomLocation,
+          weapon: newWeapon,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (newAssignmentError) {
+        console.error('Error creating new assignment:', newAssignmentError);
+      }
+
+      // Notificar al asesino de su nuevo objetivo
+      const { data: newTarget } = await supabase
+        .from('players')
+        .select('name')
+        .eq('id', victimAssignment.target_id)
+        .single();
+
+      if (newTarget) {
+        await supabase.from('notifications').insert({
+          game_id: event.game_id,
+          player_id: event.killer_id,
+          type: 'private',
+          message: `¡Asesinato confirmado! Tu nuevo objetivo es: ${newTarget.name}`,
+          read: false,
+        });
+      }
+    }
+
+    // 5. Crear notificación pública
+    await supabase.from('notifications').insert({
+      game_id: event.game_id,
+      player_id: null,
+      type: 'public',
+      message: '⚔️ Se ha producido un asesinato',
+      read: false,
+    });
+
+    // 6. Verificar si quedan jugadores vivos
+    const { data: alivePlayers, error: aliveError } = await supabase
+      .from('players')
+      .select('id')
+      .eq('game_id', event.game_id)
+      .eq('is_alive', true)
+      .eq('is_game_master', false);
+
+    if (!aliveError && alivePlayers) {
+      const aliveCount = alivePlayers.length;
+
+      if (aliveCount === 1) {
+        // ¡Hay un ganador!
+        await supabase
+          .from('games')
+          .update({
+            status: 'finished',
+            end_time: new Date().toISOString(),
+          })
+          .eq('id', event.game_id);
+
+        await supabase.from('notifications').insert({
+          game_id: event.game_id,
+          player_id: null,
+          type: 'public',
+          message: '🏆 ¡El juego ha terminado! Hay un ganador',
+          read: false,
+        });
+      } else {
+        // Notificar cuántos quedan vivos
+        await supabase.from('notifications').insert({
+          game_id: event.game_id,
+          player_id: null,
+          type: 'public',
+          message: `Quedan ${aliveCount} jugadores vivos`,
+          read: false,
+        });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Asesinato confirmado exitosamente',
+    });
+  } catch (error) {
+    console.error('Error in kill confirm:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}
