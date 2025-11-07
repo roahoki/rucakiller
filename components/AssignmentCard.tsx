@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Assignment, Player } from '@/lib/types';
 
@@ -17,6 +17,12 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
   const [pendingKill, setPendingKill] = useState(false);
   const [hasAsesinoSerial, setHasAsesinoSerial] = useState(false);
   const [targetHasAsesinoSerial, setTargetHasAsesinoSerial] = useState(false);
+  const targetRef = useRef<Player | null>(null);
+
+  // Mantener targetRef actualizado
+  useEffect(() => {
+    targetRef.current = target;
+  }, [target]);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -157,11 +163,20 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
         },
         (payload) => {
           const event = payload.old as any;
+          console.log('DELETE event received:', event);
+          
           // Si el evento eliminado era del jugador actual y no estaba confirmado, fue rechazado
           if (event.killer_id === playerId && !event.confirmed) {
+            console.log('Kill attempt rejected by victim');
             setPendingKill(false);
+            
+            // Usar targetRef para obtener el nombre actual
+            const targetName = targetRef.current?.name || 'Tu objetivo';
+            
             // Mostrar notificación de rechazo
-            alert(`❌ ${target?.name || 'Tu objetivo'} rechazó tu intento de asesinato. Vuelve a intentarlo cuando se cumplan las condiciones.`);
+            setTimeout(() => {
+              alert(`❌ ${targetName} rechazó tu intento de asesinato. Vuelve a intentarlo cuando se cumplan las condiciones.`);
+            }, 100);
           }
         }
       )

@@ -143,8 +143,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`Personajes especiales asignados: ${specialCharacterAssignments.length}/${killers.length} jugadores`);
 
-    // Crear los 3 poderes disponibles para esta partida (uno de cada tipo)
-    const powerTypes = ['asesino_serial', 'investigador', 'sicario'];
+    // Crear los 2 poderes disponibles para esta partida (uno de cada tipo)
+    const powerTypes = ['asesino_serial', 'investigador'];
     const powersData = powerTypes.map(powerName => ({
       game_id: gameId,
       power_name: powerName,
