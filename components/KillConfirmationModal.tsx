@@ -131,6 +131,9 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
 
     setProcessing(true);
 
+    // Marcar como procesado ANTES de hacer la petición
+    setProcessedEvents(prev => new Set(prev).add(pendingKill.eventId));
+
     try {
       const response = await fetch('/api/kill/confirm', {
         method: 'POST',
@@ -148,12 +151,25 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
 
       if (!response.ok) {
         alert(data.error || 'Error al procesar la respuesta');
+        // Si falla, quitar de procesados para poder reintentar
+        setProcessedEvents(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(pendingKill.eventId);
+          return newSet;
+        });
       } else {
+        // Cerrar el modal
         setPendingKill(null);
       }
     } catch (error) {
       console.error('Error confirming kill:', error);
       alert('Error al procesar la respuesta');
+      // Si falla, quitar de procesados para poder reintentar
+      setProcessedEvents(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(pendingKill.eventId);
+        return newSet;
+      });
     } finally {
       setProcessing(false);
     }

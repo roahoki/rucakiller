@@ -18,7 +18,13 @@ interface AvailablePower {
   taken_by_player_id: string | null;
 }
 
-const powerInfo = {
+const powerInfo: Record<string, {
+  name: string;
+  icon: string;
+  description: string;
+  contra: string;
+  color: string;
+}> = {
   asesino_serial: {
     name: 'Asesino Serial',
     icon: '🔪',
@@ -32,13 +38,6 @@ const powerInfo = {
     description: 'Puedes ver el objetivo completo de otro jugador (nombre + condiciones)',
     contra: 'El jugador investigado recibirá una notificación',
     color: 'from-blue-600 to-blue-700',
-  },
-  sicario: {
-    name: 'Sicario',
-    icon: '🎯',
-    description: 'Puedes elegir manualmente tu próxima víctima',
-    contra: 'Tu nueva víctima recibirá una pista sobre el arma con la que la cazas',
-    color: 'from-purple-600 to-purple-700',
   },
 };
 
@@ -134,7 +133,8 @@ export default function PowerSelectionModal({
                 Poderes Disponibles:
               </h3>
               {availablePowers.map((power) => {
-                const info = powerInfo[power.power_name as keyof typeof powerInfo];
+                const info = powerInfo[power.power_name];
+                if (!info) return null; // Skip if power info not found
                 const isSelected = selectedPower === power.power_name;
 
                 return (
@@ -182,7 +182,8 @@ export default function PowerSelectionModal({
               </h3>
               <div className="space-y-2">
                 {takenPowers.map((power) => {
-                  const info = powerInfo[power.power_name as keyof typeof powerInfo];
+                  const info = powerInfo[power.power_name];
+                  if (!info) return null; // Skip if power info not found
                   return (
                     <div
                       key={power.id}
