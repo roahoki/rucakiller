@@ -13,6 +13,8 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [target, setTarget] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attempting, setAttempting] = useState(false);
+  const [pendingKill, setPendingKill] = useState(false);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -48,6 +50,19 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
         }
       }
 
+      // Verificar si hay un intento de asesinato pendiente
+      const { data: pendingEvent } = await supabase
+        .from('events')
+        .select('id')
+        .eq('game_id', gameId)
+        .eq('killer_id', playerId)
+        .eq('confirmed', false)
+        .maybeSingle();
+
+      if (pendingEvent) {
+        setPendingKill(true);
+      }
+
       setLoading(false);
     };
 
@@ -72,6 +87,7 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
             
             if (newAssignment.is_active) {
               setAssignment(newAssignment);
+              setPendingKill(false); // Reset pending kill on new assignment
 
               // Obtener nuevo objetivo
               const { data: newTarget } = await supabase
@@ -89,10 +105,65 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
       )
       .subscribe();
 
+    // Suscripción a eventos para detectar confirmaciones
+    const eventsChannel = supabase
+      .channel(`events:${playerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'events',
+          filter: `killer_id=eq.${playerId}`,
+        },
+        (payload) => {
+          const event = payload.new as any;
+          if (event.confirmed) {
+            setPendingKill(false);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(assignmentChannel);
+      supabase.removeChannel(eventsChannel);
     };
   }, [gameId, playerId]);
+
+  const handleKillAttempt = async () => {
+    if (!assignment || !target) return;
+
+    setAttempting(true);
+
+    try {
+      const response = await fetch('/api/kill/attempt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          hunterId: playerId,
+          targetId: target.id,
+          gameId: gameId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Error al intentar el asesinato');
+      } else {
+        setPendingKill(true);
+        alert('Intento de asesinato registrado. Esperando confirmación de la víctima.');
+      }
+    } catch (error) {
+      console.error('Error attempting kill:', error);
+      alert('Error al intentar el asesinato');
+    } finally {
+      setAttempting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -169,6 +240,36 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
           💡 <strong>Cómo asesinar:</strong> Debes estar en <strong>{assignment.location}</strong> con el arma <strong>{assignment.weapon}</strong> y decirle a tu objetivo: <em>"Te maté"</em>
         </p>
       </div>
+
+      {/* Kill button */}
+      {target.is_alive && (
+        <div className="mt-6">
+          {pendingKill ? (
+            <div className="rounded-lg bg-yellow-600/20 p-4 backdrop-blur-sm border-2 border-yellow-500/50">
+              <p className="text-center text-lg font-semibold text-yellow-200">
+                ⏳ Esperando confirmación de {target.name}...
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={handleKillAttempt}
+              disabled={attempting}
+              className="w-full rounded-xl bg-gradient-to-r from-red-600 to-red-700 p-4 font-bold text-white shadow-lg transition-all hover:from-red-700 hover:to-red-800 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {attempting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  Procesando...
+                </span>
+              ) : (
+                <span className="text-lg">
+                  ⚔️ He asesinado a {target.name}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
