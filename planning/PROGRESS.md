@@ -2,7 +2,7 @@
 
 **Última actualización:** 7 de noviembre, 2025  
 **Versión:** MVP Core (v0.1)  
-**Progreso General:** 52% completado
+**Progreso General:** 60% completado
 
 ---
 
@@ -51,6 +51,11 @@ feat(task-107): implementar validación de intento de asesinato
 ### Commit 9: Confirmación y herencia de objetivo
 ```
 feat(task-108): implementar confirmación de asesinato y herencia de objetivo
+```
+
+### Commit 10: Dashboard del GameMaster
+```
+feat(task-109): implementar Dashboard completo del GameMaster
 ```
 
 ---
@@ -114,20 +119,21 @@ feat(task-108): implementar confirmación de asesinato y herencia de objetivo
 - ✅ Notificaciones públicas y privadas
 - ✅ Actualización en tiempo real con Realtime
 
+### 8. Dashboard del GameMaster
+- ✅ Vista general con estadísticas en tiempo real
+- ✅ Grid de stats (vivos, muertos, kills, estado)
+- ✅ Botón pausar/reanudar juego
+- ✅ Lista de jugadores con estado y kill count
+- ✅ Mostrar personajes especiales
+- ✅ Ver asignaciones activas (cadena hunter → target)
+- ✅ Mostrar condiciones de cada asignación
+- ✅ Historial de asesinatos confirmados
+- ✅ Suscripciones Realtime para actualización automática
+- ✅ Verificación de autenticación GameMaster
+
 ---
 
 ## 🚧 Próximas Tareas Prioritarias
-
-### TASK-109: Dashboard del GameMaster
-**Estimación:** 6 horas  
-**Prioridad:** 🟠 ALTA
-
-**Qué debe hacer:**
-- Ver todas las asignaciones activas
-- Mapa de la cadena circular
-- Estadísticas en tiempo real
-- Historial de asesinatos
-- Controles de pausa/reanudación
 
 ---
 
