@@ -1,5 +1,35 @@
 # 🏗️ Plan de Desarrollo - RucaKiller
 
+**Última actualización:** 7 de noviembre, 2025  
+**Estado:** 🟢 MVP Core en desarrollo activo  
+**Progreso:** 9 tareas completadas / ~25 tareas totales (36%)
+
+---
+
+## 📊 Estado Actual del Proyecto
+
+### ✅ Funcionalidades Implementadas (MVP Core):
+1. **Setup Completo:** Next.js 16.0.1 + TypeScript + Tailwind CSS 4
+2. **Supabase:** 8 tablas configuradas con RLS y Realtime
+3. **Autenticación GameMaster:** Crear partida con PIN (4-6 dígitos, hashing SHA-256)
+4. **Re-acceso GameMaster:** Login con código + PIN
+5. **Unirse como Jugador:** Form con código de partida + nombre
+6. **Lobby en Tiempo Real:** Vista compartida con actualización automática de jugadores
+7. **Configuración del Juego:** 5 lugares + 18 armas (valores de GAME-CORE.md)
+8. **Algoritmo Circular:** Genera asignaciones hunter → target perfectas
+9. **Inicio del Juego:** Cambio de estado + redirección automática
+
+### 🚧 En Progreso:
+- **TASK-106:** Vista del jugador - Ver su objetivo (próximo)
+
+### 📋 Próximas Prioridades:
+1. Mostrar objetivo, lugar y arma al jugador
+2. Validar asesinatos (botón "He asesinado")
+3. Herencia de objetivos al asesinar
+4. Dashboard del GameMaster (monitoreo en tiempo real)
+
+---
+
 ## 🎯 Objetivo del Proyecto
 
 Desarrollar una **PWA (Progressive Web App)** con Next.js para gestionar un juego de rol secreto tipo "Assassin" durante un fin de semana en una parcela con amigos.
@@ -9,25 +39,25 @@ Desarrollar una **PWA (Progressive Web App)** con Next.js para gestionar un jueg
 ## 🛠️ Stack Tecnológico
 
 ### Frontend:
-- **Next.js 14+** (App Router)
-- **TypeScript**
-- **Tailwind CSS** (estilización)
-- **React Hooks** (estado y efectos)
-- **PWA** (Progressive Web App con service workers)
+- **Next.js 16.0.1** (App Router) ✅
+- **TypeScript** ✅
+- **Tailwind CSS 4** (estilización) ✅
+- **React 19.2.0 Hooks** (estado y efectos) ✅
+- **PWA** (Progressive Web App con service workers) 🚧 Pendiente
 
 ### Backend:
-- **Supabase** (Backend as a Service)
-  - PostgreSQL (base de datos)
-  - Realtime (suscripciones en tiempo real)
-  - Authentication (auth sin contraseñas, solo códigos)
-  - Storage (buckets para fotos - v2.0)
+- **Supabase** (Backend as a Service) ✅
+  - PostgreSQL (base de datos) ✅
+  - Realtime (suscripciones en tiempo real) ✅
+  - Authentication (PIN-based para GameMaster) ✅
+  - Storage (buckets para fotos - v2.0) 🚧 Pendiente
 
 ### IA y Voz:
-- **ElevenLabs API** (agente de voz conversacional)
-- **Web Speech API** (reconocimiento de voz del navegador)
+- **ElevenLabs API** (agente de voz conversacional) 🚧 Pendiente
+- **Web Speech API** (reconocimiento de voz del navegador) 🚧 Pendiente
 
 ### Deployment:
-- **Vercel** (hosting de Next.js con PWA)
+- **Vercel** (hosting de Next.js con PWA) 🚧 Pendiente
 
 ---
 

@@ -1,15 +1,87 @@
 # 📋 Backlog de Tareas - RucaKiller
 
-**Última actualización:** 6 de noviembre, 2025
+**Última actualización:** 7 de noviembre, 2025
+**Estado del Proyecto:** 🟢 En desarrollo activo - MVP Core en progreso
 
 ---
 
-## 🎯 FASE 0: Setup Inicial del Proyecto
+## ✅ TAREAS COMPLETADAS
+
+### ✅ TASK-000: Configuración del Entorno
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Next.js 16.0.1 con TypeScript
+- Tailwind CSS 4 configurado
+- Estructura de carpetas establecida
+
+### ✅ TASK-001: Configuración de Supabase
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- 8 tablas creadas (games, players, assignments, locations, weapons, events, notifications, available_powers)
+- RLS configurado
+- Realtime habilitado
+
+### ✅ TASK-100: Landing Page y Navegación
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Landing page responsive con 3 botones
+- Diseño mobile-first
+
+### ✅ TASK-101: Crear Partida (GameMaster)
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Formulario con nombre + PIN (4-6 dígitos)
+- API /api/game/create con hashing SHA-256
+- Función SQL create_game_with_master
+- Session management en localStorage
+
+### ✅ TASK-101.5: Login de GameMaster (Re-acceso a Partida)
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Página /gamemaster/login
+- API /api/gamemaster/login con validación PIN
+- Botón "Soy GameMaster" en landing
+
+### ✅ TASK-102: Unirse a Partida (Killer)
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Formulario /join con código y nombre
+- API /api/game/join
+- Validaciones completas
+
+### ✅ TASK-103: Lobby / Sala de Espera
+**Estado:** COMPLETADA (integrada con TASK-102)
+**Fecha:** 6 de noviembre, 2025
+- Componente /game/[id]/lobby con Realtime
+- Lista de jugadores actualizada en tiempo real
+- Vista unificada para GM y killers
+
+### ✅ TASK-104: Configurar Lugares y Armas (GameMaster)
+**Estado:** COMPLETADA
+**Fecha:** 6 de noviembre, 2025
+- Componente GameSetup con formularios
+- API /api/game/configure
+- 5 lugares + 18 armas predeterminados de GAME-CORE.md
+- Validación y re-configuración
+
+### ✅ TASK-105: Algoritmo de Asignación Circular
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- Función generateCircularAssignments() con Fisher-Yates shuffle
+- Validación de cadena circular perfecta
+- API /api/game/start
+- Asignación de lugares y armas únicas
+- Redirección automática con Realtime
+
+---
+
+## 🎯 FASE 1: MVP Core - Sistema Base del Juego
 
 ### TASK-000: Configuración del Entorno
 **Prioridad:** 🔴 CRÍTICA
 **Estimación:** 2 horas
 **Dependencias:** Ninguna
+**Estado:** ✅ COMPLETADA
 
 **Subtareas:**
 - [ ] Inicializar proyecto Next.js 14+ con TypeScript
