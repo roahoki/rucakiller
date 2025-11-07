@@ -1,9 +1,9 @@
 -- Tabla de poderes disponibles (únicos por partida)
--- Máximo 3 poderes: uno de cada tipo
+-- Máximo 2 poderes: uno de cada tipo
 CREATE TABLE IF NOT EXISTS available_powers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE NOT NULL,
-  power_name VARCHAR(20) NOT NULL CHECK (power_name IN ('asesino_serial', 'investigador', 'sicario')),
+  power_name VARCHAR(20) NOT NULL CHECK (power_name IN ('asesino_serial', 'investigador')),
   is_taken BOOLEAN DEFAULT FALSE,
   taken_by_player_id UUID REFERENCES players(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT NOW()
@@ -34,7 +34,7 @@ CREATE POLICY "Only system can insert powers"
   FOR INSERT
   WITH CHECK (TRUE);
 
-COMMENT ON TABLE available_powers IS 'Poderes únicos por partida que se desbloquean al lograr 2 kills. Máximo 3 poderes (uno de cada tipo) por juego.';
-COMMENT ON COLUMN available_powers.power_name IS 'Tipo de poder: asesino_serial, investigador, sicario';
+COMMENT ON TABLE available_powers IS 'Poderes únicos por partida que se desbloquean al lograr 2 kills. Máximo 2 poderes (uno de cada tipo) por juego.';
+COMMENT ON COLUMN available_powers.power_name IS 'Tipo de poder: asesino_serial, investigador';
 COMMENT ON COLUMN available_powers.is_taken IS 'Indica si el poder ya fue tomado por algún jugador';
 COMMENT ON COLUMN available_powers.taken_by_player_id IS 'ID del jugador que tomó este poder';

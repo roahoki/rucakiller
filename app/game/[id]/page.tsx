@@ -10,7 +10,6 @@ import NotificationCenter from '@/components/NotificationCenter';
 import SpecialPowerModal from '@/components/SpecialPowerModal';
 import PowerSelectionModal from '@/components/PowerSelectionModal';
 import InvestigadorModal from '@/components/InvestigadorModal';
-import SicarioModal from '@/components/SicarioModal';
 
 export default function GamePage() {
   const params = useParams();
@@ -23,7 +22,6 @@ export default function GamePage() {
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showPowerSelectionModal, setShowPowerSelectionModal] = useState(false);
   const [showInvestigadorModal, setShowInvestigadorModal] = useState(false);
-  const [showSicarioModal, setShowSicarioModal] = useState(false);
   
   // Guardar props del modal para evitar que se recree cuando player cambia
   const [powerModalProps, setPowerModalProps] = useState<{
@@ -458,14 +456,6 @@ export default function GamePage() {
                         🔍 Usar Investigador
                       </button>
                     )}
-                    {player.power_2kills === 'sicario' && (
-                      <button
-                        onClick={() => setShowSicarioModal(true)}
-                        className="mt-3 w-full rounded-lg bg-purple-600 py-2 font-semibold text-white hover:bg-purple-500 transition-colors"
-                      >
-                        🎯 Usar Sicario
-                      </button>
-                    )}
                     {player.power_2kills === 'asesino_serial' && (
                       <p className="mt-2 text-xs text-purple-300">
                         ⚡ Poder pasivo: Puedes asesinar en cualquier lugar
@@ -484,16 +474,6 @@ export default function GamePage() {
         <InvestigadorModal
           isOpen={showInvestigadorModal}
           onClose={() => setShowInvestigadorModal(false)}
-          gameId={gameId}
-          playerId={player.id}
-        />
-      )}
-
-      {/* Sicario Modal */}
-      {showSicarioModal && player && (
-        <SicarioModal
-          isOpen={showSicarioModal}
-          onClose={() => setShowSicarioModal(false)}
           gameId={gameId}
           playerId={player.id}
         />

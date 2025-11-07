@@ -19,6 +19,7 @@ interface PendingKill {
 export default function KillConfirmationModal({ gameId, playerId }: KillConfirmationModalProps) {
   const [pendingKill, setPendingKill] = useState<PendingKill | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [processedEvents, setProcessedEvents] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkPendingKills = async () => {
@@ -32,7 +33,7 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
         .eq('confirmed', false)
         .maybeSingle();
 
-      if (event) {
+      if (event && !processedEvents.has(event.id)) {
         // Obtener nombre del asesino
         const { data: killer } = await supabase
           .from('players')
@@ -67,7 +68,7 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
         async (payload) => {
           const event = payload.new as any;
           
-          if (event.event_type === 'kill' && !event.confirmed) {
+          if (event.event_type === 'kill' && !event.confirmed && !processedEvents.has(event.id)) {
             // Obtener nombre del asesino
             const { data: killer } = await supabase
               .from('players')
@@ -97,6 +98,8 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
           const event = payload.old as any;
           if (event.id === pendingKill?.eventId) {
             setPendingKill(null);
+            // Marcar como procesado para evitar que vuelva a aparecer
+            setProcessedEvents(prev => new Set(prev).add(event.id));
           }
         }
       )
@@ -111,6 +114,8 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
           const event = payload.new as any;
           if (event.id === pendingKill?.eventId && event.confirmed) {
             setPendingKill(null);
+            // Marcar como procesado
+            setProcessedEvents(prev => new Set(prev).add(event.id));
           }
         }
       )
@@ -119,7 +124,7 @@ export default function KillConfirmationModal({ gameId, playerId }: KillConfirma
     return () => {
       supabase.removeChannel(eventsChannel);
     };
-  }, [gameId, playerId, pendingKill?.eventId]);
+  }, [gameId, playerId, pendingKill?.eventId, processedEvents]);
 
   const handleConfirmation = async (confirmed: boolean) => {
     if (!pendingKill) return;

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { Game, Player, Assignment, Event } from '@/lib/types';
+import ReassignmentModal from '@/components/ReassignmentModal';
 
 interface AssignmentWithPlayers extends Assignment {
   hunter_name?: string;
@@ -21,6 +22,8 @@ export default function GameMasterDashboard() {
   const [loading, setLoading] = useState(true);
   const [pausing, setPausing] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [showReassignModal, setShowReassignModal] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithPlayers | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -464,23 +467,35 @@ export default function GameMasterDashboard() {
                   key={assignment.id}
                   className="rounded-lg bg-black/40 p-4 backdrop-blur-sm border border-red-500/20"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="font-semibold text-white truncate">
                         {assignment.hunter_name}
                       </span>
-                      <span className="text-red-400">→</span>
-                      <span className="font-semibold text-red-300">
+                      <span className="text-red-400 flex-shrink-0">→</span>
+                      <span className="font-semibold text-red-300 truncate">
                         {assignment.target_name}
                       </span>
                     </div>
-                    <div className="text-right text-sm">
-                      <p className="text-gray-400">
-                        📍 {assignment.location}
-                      </p>
-                      <p className="text-gray-400">
-                        🔪 {assignment.weapon}
-                      </p>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="text-sm flex-1 sm:flex-initial">
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                          📍 {assignment.location}
+                        </p>
+                        <p className="text-gray-400 text-xs sm:text-sm">
+                          🔪 {assignment.weapon}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedAssignment(assignment);
+                          setShowReassignModal(true);
+                        }}
+                        className="bg-purple-600/80 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors touch-manipulation flex-shrink-0"
+                        title="Reasignar misión"
+                      >
+                        🔄
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -519,6 +534,23 @@ export default function GameMasterDashboard() {
           </div>
         )}
       </div>
+
+      {/* Reassignment Modal */}
+      {showReassignModal && selectedAssignment && (
+        <ReassignmentModal
+          isOpen={showReassignModal}
+          onClose={() => {
+            setShowReassignModal(false);
+            setSelectedAssignment(null);
+          }}
+          gameId={gameId}
+          assignmentId={selectedAssignment.id}
+          currentHunterName={selectedAssignment.hunter_name || ''}
+          currentTargetId={selectedAssignment.target_id}
+          currentLocation={selectedAssignment.location}
+          currentWeapon={selectedAssignment.weapon}
+        />
+      )}
     </div>
   );
 }

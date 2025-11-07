@@ -19,7 +19,7 @@ export interface Player {
   is_game_master: boolean;
   special_character: 'espia' | 'detective' | 'saboteador' | null;
   special_character_used: boolean;
-  power_2kills: 'asesino_serial' | 'investigador' | 'sicario' | null;
+  power_2kills: 'asesino_serial' | 'investigador' | null;
   power_2kills_used: boolean;
   kill_count: number;
   created_at: string;
@@ -77,7 +77,7 @@ export interface Notification {
 export interface AvailablePower {
   id: string;
   game_id: string;
-  power_name: 'asesino_serial' | 'investigador' | 'sicario';
+  power_name: 'asesino_serial' | 'investigador';
   is_taken: boolean;
   taken_by_player_id: string | null;
   created_at: string;

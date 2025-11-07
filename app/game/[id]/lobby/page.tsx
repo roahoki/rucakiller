@@ -221,23 +221,23 @@ export default function GameLobby() {
               {players.map((player, index) => (
                 <div
                   key={player.id}
-                  className="flex items-center justify-between rounded-lg bg-black/40 p-4"
+                  className="flex items-center justify-between rounded-lg bg-black/40 p-3 sm:p-4 gap-2"
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    <span className="text-2xl">{index + 1}</span>
-                    <div>
-                      <p className="font-semibold text-white">{player.name}</p>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{index + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-white truncate text-sm sm:text-base">{player.name}</p>
                       {player.is_game_master && (
                         <p className="text-xs text-yellow-400">👑 GameMaster</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     <div className="h-3 w-3 rounded-full bg-green-500"></div>
                     {isGameMaster && !player.is_game_master && (
                       <button
                         onClick={() => handleRemovePlayer(player.id, player.name)}
-                        className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition-colors"
+                        className="bg-red-600/80 hover:bg-red-600 active:bg-red-700 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors touch-manipulation"
                         title="Eliminar jugador"
                       >
                         🗑️

@@ -130,7 +130,7 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
       )
       .subscribe();
 
-    // Suscripción a eventos para detectar confirmaciones
+    // Suscripción a eventos para detectar confirmaciones o rechazos
     const eventsChannel = supabase
       .channel(`events:${playerId}`)
       .on(
@@ -145,6 +145,23 @@ export default function AssignmentCard({ gameId, playerId }: AssignmentCardProps
           const event = payload.new as any;
           if (event.confirmed) {
             setPendingKill(false);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'events',
+        },
+        (payload) => {
+          const event = payload.old as any;
+          // Si el evento eliminado era del jugador actual y no estaba confirmado, fue rechazado
+          if (event.killer_id === playerId && !event.confirmed) {
+            setPendingKill(false);
+            // Mostrar notificación de rechazo
+            alert(`❌ ${target?.name || 'Tu objetivo'} rechazó tu intento de asesinato. Vuelve a intentarlo cuando se cumplan las condiciones.`);
           }
         }
       )
