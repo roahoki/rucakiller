@@ -58,6 +58,11 @@ feat(task-108): implementar confirmación de asesinato y herencia de objetivo
 feat(task-109): implementar Dashboard completo del GameMaster
 ```
 
+### Commit 11: Fix ganador
+```
+fix: resolver bug de auto-asignación al ganar + mostrar pantalla de ganador
+```
+
 ---
 
 ## ✅ Funcionalidades Implementadas
@@ -130,6 +135,15 @@ feat(task-109): implementar Dashboard completo del GameMaster
 - ✅ Historial de asesinatos confirmados
 - ✅ Suscripciones Realtime para actualización automática
 - ✅ Verificación de autenticación GameMaster
+
+### 9. Sistema de Victoria
+- ✅ Detección correcta de ganador (1 jugador vivo)
+- ✅ NO crear asignación cuando queda 1 jugador
+- ✅ Desactivar todas las asignaciones al finalizar
+- ✅ Marcar juego como 'finished'
+- ✅ Pantalla de ganador con trofeo y stats
+- ✅ Notificaciones de victoria (privada + pública)
+- ✅ Mostrar total de asesinatos del ganador
 
 ---
 
