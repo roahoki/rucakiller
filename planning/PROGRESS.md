@@ -2,7 +2,7 @@
 
 **Última actualización:** 7 de noviembre, 2025  
 **Versión:** MVP Core (v0.1)  
-**Progreso General:** 60% completado
+**Progreso General:** 🎉 MVP CORE 100% COMPLETADO + FIXES CRÍTICOS
 
 ---
 
@@ -63,12 +63,31 @@ feat(task-109): implementar Dashboard completo del GameMaster
 fix: resolver bug de auto-asignación al ganar + mostrar pantalla de ganador
 ```
 
+### Commit 12: Documentación MVP Core
+```
+docs: actualizar documentación - MVP CORE 100% COMPLETADO (TASK-000 a TASK-109)
+```
+
+### Commit 13: Fixes críticos ⭐ NUEVO
+```
+fix(task-106,task-108): arreglar kill_count, auto-refresh víctima, pantalla ganador para todos y botón volver
+```
+**Cambios:**
+- Función RPC `increment_kill_count()` para incremento atómico ✅
+- Suscripción Realtime a `players` para auto-refresh ✅
+- Pantalla de ganador visible para TODOS los jugadores ✅
+- Botón "Volver al Menú Principal" con limpieza de localStorage ✅
+
 ---
 
 ## ✅ Funcionalidades Implementadas
 
 ### 1. Sistema de Partidas
 - ✅ Crear partida con código único (6 caracteres)
+- ✅ GameMaster protegido con PIN (4-6 dígitos, SHA-256)
+- ✅ Re-acceso GameMaster (código + PIN)
+- ✅ Jugadores se unen con código + nombre
+- ✅ Validación de nombres duplicados
 - ✅ GameMaster protegido con PIN (4-6 dígitos, SHA-256)
 - ✅ Re-acceso GameMaster (código + PIN)
 - ✅ Jugadores se unen con código + nombre
@@ -141,9 +160,55 @@ fix: resolver bug de auto-asignación al ganar + mostrar pantalla de ganador
 - ✅ NO crear asignación cuando queda 1 jugador
 - ✅ Desactivar todas las asignaciones al finalizar
 - ✅ Marcar juego como 'finished'
-- ✅ Pantalla de ganador con trofeo y stats
+- ✅ **Pantalla de ganador visible para TODOS los jugadores**
+- ✅ **Ganador ve trofeo dorado 🏆**
+- ✅ **Otros jugadores ven corona morada 👑 + nombre del ganador**
+- ✅ **Mostrar kill_count del ganador a todos**
+- ✅ **Botón "Volver al Menú Principal" para limpiar y reiniciar**
 - ✅ Notificaciones de victoria (privada + pública)
-- ✅ Mostrar total de asesinatos del ganador
+
+### 10. Sistema de Kill Count
+- ✅ Campo `kill_count` en tabla players (INTEGER, default: 0)
+- ✅ **Función SQL `increment_kill_count()` para incremento atómico**
+- ✅ **Actualización en tiempo real con Realtime**
+- ✅ **Mostrado en Player Status Card**
+- ✅ **Sincronización automática al confirmar asesinatos**
+
+### 11. Auto-Refresh y Realtime
+- ✅ **Suscripción a tabla `players` para detectar cambios**
+- ✅ **Auto-refresh cuando `is_alive` cambia a false**
+- ✅ **Auto-refresh cuando `kill_count` aumenta**
+- ✅ **No requiere F5 manual para ver cambios**
+- ✅ Suscripción a tabla `games` para cambios de estado
+- ✅ Suscripción a tabla `assignments` para herencias
+
+---
+
+## 🐛 Bugs Corregidos (Sesión 7 Nov)
+
+### Bug #1: Kill Count no funcionaba
+- **Problema:** El contador no se incrementaba al confirmar asesinatos
+- **Causa:** Faltaba la función RPC en Supabase
+- **Solución:** Creada función `increment_kill_count(player_id UUID)` en Supabase
+- **Estado:** ✅ RESUELTO
+
+### Bug #2: Víctima no veía que fue eliminada
+- **Problema:** Después de confirmar asesinato, pantalla no se actualizaba
+- **Causa:** Falta de suscripción Realtime a cambios en el jugador
+- **Solución:** Agregada suscripción a `players` table en `/game/[id]/page.tsx`
+- **Estado:** ✅ RESUELTO
+
+### Bug #3: Solo ganador veía pantalla de victoria
+- **Problema:** Jugadores eliminados no sabían quién ganó
+- **Causa:** Lógica solo mostraba victoria al `is_alive = true`
+- **Solución:** Nueva lógica con estado `isFinished` que muestra a TODOS
+- **Estado:** ✅ RESUELTO
+
+### Bug #4: No había forma de salir después del juego
+- **Problema:** Pantalla final sin opciones para volver
+- **Causa:** Falta de navegación post-juego
+- **Solución:** Botón "Volver al Menú Principal" que limpia localStorage
+- **Estado:** ✅ RESUELTO
 
 ---
 

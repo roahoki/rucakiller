@@ -1,7 +1,7 @@
 # 📋 Backlog de Tareas - RucaKiller
 
-**Última actualización:** 7 de noviembre, 2025
-**Estado del Proyecto:** 🟢 En desarrollo activo - MVP Core en progreso
+**Última actualización:** 7 de noviembre, 2025  
+**Estado del Proyecto:** 🎉 MVP CORE COMPLETADO + FIXES APLICADOS
 
 ---
 
@@ -20,6 +20,7 @@
 - 8 tablas creadas (games, players, assignments, locations, weapons, events, notifications, available_powers)
 - RLS configurado
 - Realtime habilitado
+- 15 migraciones aplicadas (incluye increment_kill_count function)
 
 ### ✅ TASK-100: Landing Page y Navegación
 **Estado:** COMPLETADA
@@ -72,6 +73,52 @@
 - API /api/game/start
 - Asignación de lugares y armas únicas
 - Redirección automática con Realtime
+
+### ✅ TASK-106: Vista del Jugador - Ver Objetivo
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- Componente AssignmentCard con diseño atractivo
+- Mostrar nombre del objetivo, lugar y arma
+- Actualización en tiempo real con Realtime
+- Botón "He Asesinado" integrado
+- Estados de juego (pausado, ganador, muerto)
+- **FIX:** Suscripción Realtime a players para auto-refresh de kill_count e is_alive
+
+### ✅ TASK-107: Validación de Asesinato - Intento
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- API /api/kill/attempt con validaciones completas
+- Verificar estado del jugador y del juego
+- Crear evento tipo 'kill' (confirmed: false)
+- Componente KillConfirmationModal para víctimas
+- Notificaciones Realtime a la víctima
+
+### ✅ TASK-108: Validación de Asesinato - Confirmación
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- API /api/kill/confirm con lógica completa
+- Confirmar/rechazar asesinatos
+- Marcar víctima como muerta (is_alive = false)
+- Incrementar kill_count del asesino (con función RPC)
+- Herencia automática del objetivo
+- Reasignación de armas (liberar y asignar nuevas)
+- Detección de ganador (1 jugador vivo)
+- Notificaciones públicas y privadas
+- **FIX:** Función SQL increment_kill_count() para incremento atómico
+- **FIX:** Pantalla de ganador para TODOS los jugadores (no solo el ganador)
+- **FIX:** Botón "Volver al Menú Principal" con limpieza de localStorage
+
+### ✅ TASK-109: Dashboard del GameMaster - Vista General
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- Página /game/[id]/dashboard completa
+- Grid de estadísticas (vivos, muertos, kills totales, estado)
+- Control pausar/reanudar juego
+- Lista de jugadores con estado y kill_count
+- Visualización de cadena de asignaciones (hunter → target)
+- Historial de asesinatos confirmados
+- Suscripciones Realtime para actualización automática
+- Verificación de autenticación GameMaster
 
 ---
 
