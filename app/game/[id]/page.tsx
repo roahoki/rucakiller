@@ -7,6 +7,7 @@ import type { Game, Player } from '@/lib/types';
 import AssignmentCard from '@/components/AssignmentCard';
 import KillConfirmationModal from '@/components/KillConfirmationModal';
 import NotificationCenter from '@/components/NotificationCenter';
+import SpecialPowerModal from '@/components/SpecialPowerModal';
 
 export default function GamePage() {
   const params = useParams();
@@ -16,6 +17,7 @@ export default function GamePage() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [winner, setWinner] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPowerModal, setShowPowerModal] = useState(false);
 
   useEffect(() => {
     const fetchGameAndPlayer = async () => {
@@ -197,6 +199,27 @@ export default function GamePage() {
       {/* Kill Confirmation Modal */}
       <KillConfirmationModal gameId={gameId} playerId={player.id} />
       
+      {/* Special Power Modal */}
+      {showPowerModal && player.special_character && !player.special_character_used && (
+        <SpecialPowerModal
+          gameId={gameId}
+          playerId={player.id}
+          playerCharacter={player.special_character}
+          onClose={() => setShowPowerModal(false)}
+          onSuccess={() => {
+            // Recargar datos del jugador
+            supabase
+              .from('players')
+              .select('*')
+              .eq('id', player.id)
+              .single()
+              .then(({ data }) => {
+                if (data) setPlayer(data);
+              });
+          }}
+        />
+      )}
+      
       <div className="mx-auto max-w-2xl pb-8">
         {/* Header */}
         <div className="mb-8 text-center relative">
@@ -317,10 +340,17 @@ export default function GamePage() {
                 <p className="text-xl font-bold text-purple-100 capitalize">
                   {player.special_character}
                 </p>
-                {player.special_character_used && (
+                {player.special_character_used ? (
                   <span className="mt-2 inline-block text-xs text-purple-300/70">
                     ✓ Ya usado
                   </span>
+                ) : (
+                  <button
+                    onClick={() => setShowPowerModal(true)}
+                    className="mt-3 w-full rounded-lg bg-purple-600 py-2 font-semibold text-white hover:bg-purple-500 transition-colors"
+                  >
+                    ⚡ Usar Poder
+                  </button>
                 )}
               </div>
             )}

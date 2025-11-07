@@ -1,8 +1,8 @@
 # 📈 Estado del Proyecto RucaKiller
 
 **Última actualización:** 7 de noviembre, 2025  
-**Versión:** FASE 2 en progreso (v0.2)  
-**Progreso General:** 🎉 MVP CORE 100% + TASK-111 Y TASK-200 COMPLETADAS
+**Versión:** FASE 2 en progreso (v0.3)  
+**Progreso General:** 🎉 MVP CORE 100% + TASK-111, 200, 201-203 COMPLETADAS
 
 ---
 
@@ -90,7 +90,7 @@ feat(task-111): implementar NotificationCenter con Realtime, sonido y vibración
 - Marcar como leídas automáticamente ✅
 - Integrado en vista jugador y dashboard GM ✅
 
-### Commit 15: Asignación de Personajes Especiales ⭐ NUEVO
+### Commit 15: Asignación de Personajes Especiales ⭐
 ```
 feat(task-200): implementar asignación aleatoria de personajes especiales
 ```
@@ -100,6 +100,19 @@ feat(task-200): implementar asignación aleatoria de personajes especiales
 - Personajes: Espía, Detective, Saboteador ✅
 - Badge en vista del jugador ✅
 - Badge en dashboard GameMaster ✅
+
+### Commit 16: Poderes de Personajes Especiales ⭐ NUEVO
+```
+feat(task-201-203): implementar poderes Espía, Detective y Saboteador
+```
+**Cambios:**
+- API /api/power/espia (ver objetivo de otro) ✅
+- API /api/power/detective (recibir pista aleatoria) ✅
+- API /api/power/saboteador (cambiar condiciones de otro) ✅
+- Componente SpecialPowerModal reutilizable ✅
+- Botón "Usar Poder" en vista del jugador ✅
+- Validaciones completas (uso único, juego activo, jugador vivo) ✅
+- Registro de eventos en tabla events ✅
 
 ---
 
@@ -209,7 +222,7 @@ feat(task-200): implementar asignación aleatoria de personajes especiales
 - ✅ **Límite de 20 notificaciones más recientes**
 - ✅ **Integrado en vista jugador y dashboard GM**
 
-### 13. Personajes Especiales (Espía, Detective, Saboteador) ⭐ NUEVO
+### 13. Personajes Especiales (Espía, Detective, Saboteador) ⭐
 - ✅ **Función assignSpecialCharacters() en /lib/game-utils.ts**
 - ✅ **Selección aleatoria de ~30% de jugadores**
 - ✅ **Asignación balanceada entre 3 personajes**
@@ -218,6 +231,30 @@ feat(task-200): implementar asignación aleatoria de personajes especiales
 - ✅ **Badge visible en dashboard GameMaster**
 - ✅ **Indicador de poder usado/no usado**
 - ✅ **Campo special_character en tabla players**
+
+### 14. Poderes de Personajes Especiales ⭐ NUEVO
+- ✅ **Poder Espía: Ver nombre del objetivo de otro jugador**
+  - API /api/power/espia con validaciones completas
+  - Modal de selección de jugador objetivo
+  - Muestra SOLO el nombre (no condiciones)
+  - Uso único por partida
+- ✅ **Poder Detective: Recibir pista aleatoria**
+  - API /api/power/detective
+  - Selección aleatoria de asignación activa
+  - Muestra lugar + arma (sin nombres de jugadores)
+  - Uso único por partida
+- ✅ **Poder Saboteador: Cambiar condiciones de otro**
+  - API /api/power/saboteador
+  - Modal para seleccionar jugador y condición
+  - Muestra condiciones actuales antes de cambiar
+  - Permite cambiar UNA condición (lugar O arma)
+  - Objetivo NO es notificado
+  - Gestión de armas disponibles
+  - Uso único por partida
+- ✅ **Componente SpecialPowerModal reutilizable**
+- ✅ **Botón "Usar Poder" en vista del jugador**
+- ✅ **Validaciones: juego activo, jugador vivo, personaje correcto**
+- ✅ **Registro de eventos en tabla events**
 
 ---
 

@@ -148,6 +148,42 @@
 - Indicador si el poder ya fue usado
 - Log en consola de asignaciones
 
+### ✅ TASK-201: Poder Espía - Ver Objetivo de Otro
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- API /api/power/espia
+- Modal de selección de jugador objetivo
+- Muestra SOLO el nombre del objetivo (sin condiciones)
+- Uso único por partida (special_character_used = true)
+- Validaciones completas (jugador vivo, juego activo, personaje correcto)
+- Registro de evento en tabla events
+- Integrado en SpecialPowerModal
+
+### ✅ TASK-202: Poder Detective - Recibir Pista
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- API /api/power/detective
+- Selección aleatoria de una asignación activa
+- Muestra lugar + arma (SIN nombres de jugadores)
+- Uso único por partida
+- Validaciones completas
+- Registro de evento en tabla events
+- Integrado en SpecialPowerModal
+
+### ✅ TASK-203: Poder Saboteador - Cambiar Condiciones
+**Estado:** COMPLETADA
+**Fecha:** 7 de noviembre, 2025
+- API /api/power/saboteador
+- Modal para seleccionar jugador y condición a cambiar
+- Muestra condiciones actuales del objetivo
+- Permite cambiar UNA condición (lugar O arma)
+- Objetivo NO es notificado del cambio
+- Gestión de armas disponibles (liberar y asignar)
+- Uso único por partida
+- Validaciones completas
+- Registro de evento en tabla events
+- Integrado en SpecialPowerModal
+
 ---
 
 ## 🎯 FASE 1: MVP Core - Sistema Base del Juego
